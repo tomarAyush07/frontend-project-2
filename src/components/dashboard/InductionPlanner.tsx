@@ -107,9 +107,9 @@ const InductionPlanner = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Scenario Selection */}
-      <div className="grid md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {scenarios.map((scenario) => (
           <Card 
             key={scenario.id}
@@ -118,31 +118,31 @@ const InductionPlanner = () => {
             }`}
             onClick={() => setSelectedScenario(scenario.id)}
           >
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">{scenario.name}</CardTitle>
+            <CardHeader className="pb-3 p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <CardTitle className="text-base sm:text-lg">{scenario.name}</CardTitle>
                 {scenario.id === 'recommended' && (
-                  <Badge className="bg-success text-success-foreground">
+                  <Badge className="bg-success text-success-foreground text-xs w-fit">
                     <Zap className="h-3 w-3 mr-1" />
                     AI Pick
                   </Badge>
                 )}
               </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-sm text-muted-foreground">{scenario.description}</p>
+            <CardContent className="space-y-3 p-3 sm:p-6 pt-0">
+              <p className="text-xs sm:text-sm text-muted-foreground">{scenario.description}</p>
               
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm">Confidence</span>
-                  <span className={`text-sm font-medium ${getConfidenceColor(scenario.confidence)}`}>
+                  <span className="text-xs sm:text-sm">Confidence</span>
+                  <span className={`text-xs sm:text-sm font-medium ${getConfidenceColor(scenario.confidence)}`}>
                     {scenario.confidence}%
                   </span>
                 </div>
                 <Progress value={scenario.confidence} className="h-2" />
               </div>
               
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <p className="text-muted-foreground">Efficiency</p>
                   <p className="font-medium">{scenario.efficiency}%</p>

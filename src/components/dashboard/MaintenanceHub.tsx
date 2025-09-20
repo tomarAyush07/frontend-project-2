@@ -159,92 +159,94 @@ const MaintenanceHub = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="job-cards" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="job-cards" className="flex items-center space-x-2">
-            <Wrench className="h-4 w-4" />
-            <span>Job Cards</span>
+        <TabsList className="grid w-full grid-cols-3 h-auto">
+          <TabsTrigger value="job-cards" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2">
+            <Wrench className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Job Cards</span>
+            <span className="sm:hidden">Jobs</span>
           </TabsTrigger>
-          <TabsTrigger value="cleaning" className="flex items-center space-x-2">
-            <Users className="h-4 w-4" />
-            <span>Cleaning</span>
+          <TabsTrigger value="cleaning" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2">
+            <Users className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Cleaning</span>
+            <span className="sm:hidden">Clean</span>
           </TabsTrigger>
-          <TabsTrigger value="predictive" className="flex items-center space-x-2">
-            <Sparkles className="h-4 w-4" />
-            <span>Predictive</span>
+          <TabsTrigger value="predictive" className="flex items-center space-x-1 sm:space-x-2 text-xs sm:text-sm py-2">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">Predictive</span>
+            <span className="sm:hidden">AI</span>
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="job-cards" className="space-y-6">
+        <TabsContent value="job-cards" className="space-y-4 sm:space-y-6">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center space-x-2">
-                  <Wrench className="h-5 w-5" />
+            <CardHeader className="p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <CardTitle className="flex items-center space-x-2 text-sm sm:text-base">
+                  <Wrench className="h-4 w-4 sm:h-5 sm:w-5" />
                   <span>Active Job Cards</span>
                 </CardTitle>
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button size="sm" className="btn-government">
+                  <Button size="sm" className="btn-government w-full sm:w-auto">
                     <Plus className="h-4 w-4 mr-2" />
-                    New Job Card
+                    <span className="hidden sm:inline">New Job Card</span>
+                    <span className="sm:hidden">New Job</span>
                   </Button>
                 </div>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="p-3 sm:p-6">
+              <div className="space-y-3 sm:space-y-4">
                 {jobCards.map((job) => (
                   <Card key={job.id} className="hover:shadow-government-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-3">
-                          <Badge variant="outline">{job.id}</Badge>
-                          <Badge className={getPriorityColor(job.priority)}>
+                    <CardContent className="p-3 sm:p-4 lg:p-6">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className="text-xs">{job.id}</Badge>
+                          <Badge className={`${getPriorityColor(job.priority)} text-xs`}>
                             {job.priority}
                           </Badge>
-                          <Badge className={getStatusColor(job.status)} variant="secondary">
+                          <Badge className={`${getStatusColor(job.status)} text-xs`} variant="secondary">
                             {job.status}
                           </Badge>
                         </div>
-                        <div className="text-right text-sm text-muted-foreground">
+                        <div className="text-left sm:text-right text-xs sm:text-sm text-muted-foreground">
                           Due: {job.dueDate}
                         </div>
                       </div>
                       
-                      <div className="grid md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <div className="space-y-2 sm:space-y-3">
                           <div>
-                            <h4 className="font-semibold">{job.trainset} - {job.type}</h4>
-                            <p className="text-sm text-muted-foreground">{job.location}</p>
+                            <h4 className="font-semibold text-sm sm:text-base">{job.trainset} - {job.type}</h4>
+                            <p className="text-xs sm:text-sm text-muted-foreground">{job.location}</p>
                           </div>
                           
-                          <div className="flex items-center space-x-4 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">Assigned to:</span>
-                              <span className="ml-2 font-medium">{job.assignedTo}</span>
-                            </div>
+                          <div className="text-xs sm:text-sm">
+                            <span className="text-muted-foreground">Assigned to:</span>
+                            <span className="ml-2 font-medium">{job.assignedTo}</span>
                           </div>
                         </div>
                         
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           <div>
                             <div className="flex justify-between items-center mb-2">
-                              <span className="text-sm text-muted-foreground">Progress</span>
-                              <span className="text-sm font-medium">
+                              <span className="text-xs sm:text-sm text-muted-foreground">Progress</span>
+                              <span className="text-xs sm:text-sm font-medium">
                                 {job.completedHours}/{job.estimatedHours} hours
                               </span>
                             </div>
-                            <Progress value={(job.completedHours / job.estimatedHours) * 100} />
+                            <Progress value={(job.completedHours / job.estimatedHours) * 100} className="h-2" />
                           </div>
                           
-                          <div className="flex space-x-2">
-                            <Button size="sm" variant="outline">View Details</Button>
-                            <Button size="sm" variant="outline">Update Status</Button>
+                          <div className="flex flex-col sm:flex-row gap-2">
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs">View Details</Button>
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto text-xs">Update Status</Button>
                           </div>
                         </div>
                       </div>

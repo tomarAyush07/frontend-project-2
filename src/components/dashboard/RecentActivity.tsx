@@ -48,31 +48,31 @@ const RecentActivity = () => {
 
   return (
     <Card className="h-fit">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Clock className="h-5 w-5" />
+      <CardHeader className="p-3 sm:p-6">
+        <CardTitle className="flex items-center space-x-2 text-sm sm:text-base">
+          <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>Recent Activity</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
-        <ScrollArea className="h-[500px] px-6">
-          <div className="space-y-4 pb-6">
+        <ScrollArea className="h-[300px] sm:h-[400px] lg:h-[500px] px-3 sm:px-6">
+          <div className="space-y-3 sm:space-y-4 pb-4 sm:pb-6">
             {activities.map((activity) => (
-              <div key={activity.id} className="flex items-start space-x-3 group">
-                <div className={`p-2 rounded-lg ${activity.bgColor} group-hover:scale-110 transition-transform`}>
-                  <activity.icon className={`h-4 w-4 ${activity.color}`} />
+              <div key={activity.id} className="flex items-start space-x-2 sm:space-x-3 group">
+                <div className={`p-1.5 sm:p-2 rounded-lg ${activity.bgColor} group-hover:scale-110 transition-transform flex-shrink-0`}>
+                  <activity.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${activity.color}`} />
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground truncate">
+                  <div className="flex items-start sm:items-center justify-between">
+                    <h4 className="text-xs sm:text-sm font-medium text-foreground truncate">
                       {activity.title}
                     </h4>
-                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2">
+                    <span className="text-xs text-muted-foreground whitespace-nowrap ml-2 flex-shrink-0">
                       {activity.time}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-1">
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                     {activity.description}
                   </p>
                   {activity.trainId && (
@@ -88,8 +88,8 @@ const RecentActivity = () => {
           </div>
         </ScrollArea>
         
-        <div className="p-4 border-t border-border">
-          <button className="w-full text-sm text-primary hover:text-primary-hover transition-colors">
+        <div className="p-3 sm:p-4 border-t border-border">
+          <button className="w-full text-xs sm:text-sm text-primary hover:text-primary-hover transition-colors">
             View All Activities
           </button>
         </div>

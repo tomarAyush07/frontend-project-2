@@ -21,9 +21,10 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   isCollapsed: boolean;
   onToggle: () => void;
+  alertCount?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, onToggle }) => {
+const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, onToggle, alertCount = 0 }) => {
   const isMobile = useIsMobile();
 
   const navigationItems = [
@@ -34,7 +35,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, 
     { id: "analytics", icon: Grid3X3, label: "Analytics", section: "Operations" },
     { id: "users", icon: Users, label: "User Management", section: "Administration" },
     { id: "settings", icon: Settings, label: "System Settings", section: "Administration" },
-    { id: "alerts", icon: AlertTriangle, label: "Alerts & Logs", section: "Administration", badge: "3" }
+    { id: "alerts", icon: AlertTriangle, label: "Alerts & Logs", section: "Administration", badge: alertCount > 0 ? alertCount.toString() : undefined }
   ];
 
   const operationsItems = navigationItems.filter(item => item.section === "Operations");
@@ -44,12 +45,12 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, 
     <Button
       key={item.id}
       variant={activeTab === item.id ? "secondary" : "ghost"}
-      className={`w-full justify-start text-left h-10 px-3 text-white hover:bg-white/10 hover:text-white ${
+      className={`w-full justify-start text-left h-11 sm:h-10 px-3 text-white hover:bg-white/10 hover:text-white ${
         activeTab === item.id ? "bg-white/20 text-white" : ""
       }`}
       onClick={() => onTabChange(item.id)}
     >
-      <item.icon className="h-4 w-4 mr-3 flex-shrink-0" />
+      <item.icon className="h-4 w-4 mr-2 sm:mr-3 flex-shrink-0" />
       {!isCollapsed && (
         <>
           <span className="flex-1 text-sm">{item.label}</span>
@@ -76,14 +77,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, 
         
         {/* Mobile Sidebar */}
         <div className={`
-          fixed left-0 top-0 h-full w-64 bg-gradient-to-b from-primary to-primary/90 
+          fixed left-0 top-0 h-full w-72 sm:w-80 bg-gradient-to-b from-primary to-primary/90 
           transform transition-transform duration-300 z-50 lg:hidden
           ${isCollapsed ? '-translate-x-full' : 'translate-x-0'}
         `}>
-          <div className="flex items-center justify-between p-4 border-b border-white/20">
-            <div className="flex items-center space-x-3">
-              <div className="bg-white/10 p-2 rounded-lg">
-                <Train className="h-5 w-5 text-white" />
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b border-white/20">
+            <div className="flex items-center space-x-2 sm:space-x-3">
+              <div className="bg-white/10 p-1.5 sm:p-2 rounded-lg">
+                <Train className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
               </div>
               <div className="text-white">
                 <h1 className="text-sm font-semibold">KMRL</h1>
@@ -93,14 +94,14 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, 
             <Button
               variant="ghost"
               size="sm"
-              className="text-white hover:bg-white/10 p-1"
+              className="text-white hover:bg-white/10 p-1 h-8 w-8"
               onClick={onToggle}
             >
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="p-4 space-y-6">
+          <div className="p-3 sm:p-4 space-y-4 sm:space-y-6 overflow-y-auto">
             <div>
               <h3 className="text-xs font-medium text-white/60 uppercase tracking-wider mb-2">Operations</h3>
               <div className="space-y-1">

@@ -83,19 +83,19 @@ const KPICards = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
       {kpiData.map((kpi, index) => (
         <Card key={index} className="hover:shadow-government-md transition-shadow">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
+            <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               {kpi.title}
             </CardTitle>
-            <div className={`p-2 rounded-lg ${kpi.bgColor}`}>
-              <kpi.icon className={`h-4 w-4 ${kpi.color}`} />
+            <div className={`p-1.5 sm:p-2 rounded-lg ${kpi.bgColor} flex-shrink-0`}>
+              <kpi.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${kpi.color}`} />
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            <div className="text-2xl font-bold text-foreground">
+            <div className="text-lg sm:text-xl lg:text-2xl font-bold text-foreground">
               {kpi.value}
             </div>
             

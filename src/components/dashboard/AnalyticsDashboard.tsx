@@ -122,25 +122,26 @@ const AnalyticsDashboard = () => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* KPI Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         {kpiMetrics.map((metric, index) => (
           <Card key={index} className="hover:shadow-government-md transition-shadow">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
                 {metric.title}
               </CardTitle>
-              <metric.icon className={`h-4 w-4 ${metric.color}`} />
+              <metric.icon className={`h-3 w-3 sm:h-4 sm:w-4 ${metric.color} flex-shrink-0`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{metric.value}</div>
-              <div className="flex items-center space-x-2 mt-2">
-                <TrendingUp className={`h-3 w-3 ${metric.trend === 'up' ? 'text-success' : 'text-destructive'} ${metric.trend === 'down' ? 'rotate-180' : ''}`} />
+            <CardContent className="p-3 sm:p-6 pt-0">
+              <div className="text-lg sm:text-2xl font-bold">{metric.value}</div>
+              <div className="flex items-center space-x-1 sm:space-x-2 mt-2">
+                <TrendingUp className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${metric.trend === 'up' ? 'text-success' : 'text-destructive'} ${metric.trend === 'down' ? 'rotate-180' : ''}`} />
                 <span className={`text-xs ${metric.trend === 'up' ? 'text-success' : 'text-destructive'}`}>
                   {metric.change}
                 </span>
-                <span className="text-xs text-muted-foreground">vs last month</span>
+                <span className="text-xs text-muted-foreground hidden sm:inline">vs last month</span>
+                <span className="text-xs text-muted-foreground sm:hidden">vs last mo</span>
               </div>
             </CardContent>
           </Card>
@@ -148,11 +149,11 @@ const AnalyticsDashboard = () => {
       </div>
 
       <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
-          <TabsTrigger value="utilization">Utilization</TabsTrigger>
-          <TabsTrigger value="insights">AI Insights</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="performance" className="text-xs sm:text-sm py-2">Performance</TabsTrigger>
+          <TabsTrigger value="maintenance" className="text-xs sm:text-sm py-2">Maintenance</TabsTrigger>
+          <TabsTrigger value="utilization" className="text-xs sm:text-sm py-2">Utilization</TabsTrigger>
+          <TabsTrigger value="insights" className="text-xs sm:text-sm py-2">AI Insights</TabsTrigger>
         </TabsList>
 
         <TabsContent value="performance" className="space-y-6">
