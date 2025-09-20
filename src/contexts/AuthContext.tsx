@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService, LoginRequest, TokenRequest, ChangePasswordRequest, ResetPasswordRequest } from '@/services/auth';
+import { authService, LoginRequest, TokenRequest, ChangePasswordRequest, ResetPasswordRequest, UserProfile } from '@/services/auth';
 
-interface User {
-  id: string;
-  email: string;
-  employee_id?: string;
-  name?: string;
-  role?: string;
+interface User extends UserProfile {
+  name?: string; // Computed from first_name + last_name
 }
 
 interface AuthContextType {
@@ -44,7 +40,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         if (storedToken && storedUser) {
           setToken(storedToken);
-          setUser(storedUser);
+          // Compute name from first_name and last_name
+          const userWithName = {
+            ...storedUser,
+            name: `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || storedUser.email
+          };
+          setUser(userWithName);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
@@ -70,8 +71,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       authService.storeToken(response.token);
       authService.storeUser(response.user);
       
+      // Compute name from first_name and last_name
+      const userWithName = {
+        ...response.user,
+        name: `${response.user.first_name || ''} ${response.user.last_name || ''}`.trim() || response.user.email
+      };
+      
       setToken(response.token);
-      setUser(response.user);
+      setUser(userWithName);
       
       // Store legacy auth for backward compatibility
       localStorage.setItem('kmrl-auth', 'true');
@@ -95,8 +102,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       authService.storeToken(response.token);
       authService.storeUser(response.user);
       
+      // Compute name from first_name and last_name
+      const userWithName = {
+        ...response.user,
+        name: `${response.user.first_name || ''} ${response.user.last_name || ''}`.trim() || response.user.email
+      };
+      
       setToken(response.token);
-      setUser(response.user);
+      setUser(userWithName);
       
       // Store legacy auth for backward compatibility
       localStorage.setItem('kmrl-auth', 'true');

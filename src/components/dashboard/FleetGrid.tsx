@@ -1,9 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/contexts/AuthContext";
+import { fleetService, Trainset } from "@/services/fleet";
+import { toast } from "@/hooks/use-toast";
 import { 
   Train, 
   MapPin, 
@@ -11,58 +14,39 @@ import {
   Wrench, 
   CheckCircle, 
   AlertTriangle,
-  Info
+  Info,
+  RefreshCw
 } from "lucide-react";
-
-// Mock data for trainsets with status matching the design
-const generateFleetData = () => {
-  const statuses = ['Ready', 'In Service', 'Maintenance', 'Standby'];
-  const locations = [
-    'Line 1', 'Line 2', 'Cleaning Bay', 'Maintenance Bay', 
-    'Depot A', 'Depot B', 'Standby Bay'
-  ];
-  const routes = ['Blue Line', 'Green Line'];
-  
-  return Array.from({ length: 25 }, (_, i) => ({
-    id: `KMR-${String(i + 1).padStart(3, '0')}`,
-    name: `Trainset ${i + 1}`,
-    status: statuses[Math.floor(Math.random() * statuses.length)],
-    location: locations[Math.floor(Math.random() * locations.length)],
-    route: routes[Math.floor(Math.random() * routes.length)],
-    lastUpdate: '2 min ago',
-    confidence: Math.floor(Math.random() * 30) + 70,
-    mileage: Math.floor(Math.random() * 50000) + 50000,
-    performance: Math.floor(Math.random() * 40) + 60,
-  }));
-};
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case 'Ready': return 'bg-green-100 text-green-800 border-green-200';
-    case 'In Service': return 'bg-blue-100 text-blue-800 border-blue-200'; 
-    case 'Maintenance': return 'bg-red-100 text-red-800 border-red-200';
-    case 'Standby': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'STANDBY': return 'bg-green-100 text-green-800 border-green-200';
+    case 'IN_SERVICE': return 'bg-blue-100 text-blue-800 border-blue-200'; 
+    case 'MAINTENANCE': return 'bg-red-100 text-red-800 border-red-200';
+    case 'OUT_OF_SERVICE': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'TESTING': return 'bg-purple-100 text-purple-800 border-purple-200';
     default: return 'bg-gray-100 text-gray-800 border-gray-200';
   }
 };
 
 const getStatusText = (status: string) => {
   switch (status) {
-    case 'Ready': return { text: 'Ready', color: 'text-green-800' };
-    case 'In Service': return { text: 'In Service', color: 'text-blue-800' };
-    case 'Maintenance': return { text: 'Maintenance', color: 'text-red-800' };
-    case 'Standby': return { text: 'Standby', color: 'text-yellow-800' };
+    case 'STANDBY': return { text: 'Standby', color: 'text-green-800' };
+    case 'IN_SERVICE': return { text: 'In Service', color: 'text-blue-800' };
+    case 'MAINTENANCE': return { text: 'Maintenance', color: 'text-red-800' };
+    case 'OUT_OF_SERVICE': return { text: 'Out of Service', color: 'text-yellow-800' };
+    case 'TESTING': return { text: 'Testing', color: 'text-purple-800' };
     default: return { text: status, color: 'text-gray-800' };
   }
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case 'Ready': return <CheckCircle className="h-4 w-4" />;
-    case 'In Service': return <Train className="h-4 w-4" />;
-    case 'Maintenance': return <Wrench className="h-4 w-4" />;
-    case 'Standby': return <Clock className="h-4 w-4" />;
-    case 'Cleaning': return <AlertTriangle className="h-4 w-4" />;
+    case 'STANDBY': return <CheckCircle className="h-4 w-4" />;
+    case 'IN_SERVICE': return <Train className="h-4 w-4" />;
+    case 'MAINTENANCE': return <Wrench className="h-4 w-4" />;
+    case 'OUT_OF_SERVICE': return <Clock className="h-4 w-4" />;
+    case 'TESTING': return <AlertTriangle className="h-4 w-4" />;
     default: return <Info className="h-4 w-4" />;
   }
 };
@@ -72,14 +56,46 @@ interface FleetGridProps {
 }
 
 const FleetGrid = ({ detailed = false }: FleetGridProps) => {
-  const [fleetData] = useState(generateFleetData());
-  const [selectedTrain, setSelectedTrain] = useState<typeof fleetData[0] | null>(null);
+  const { token } = useAuth();
+  const [trainsets, setTrainsets] = useState<Trainset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedTrain, setSelectedTrain] = useState<Trainset | null>(null);
+
+  useEffect(() => {
+    if (token) {
+      loadTrainsets();
+    }
+  }, [token]);
+
+  const loadTrainsets = async () => {
+    try {
+      setLoading(true);
+      const response = await fleetService.getTrainsets(token!);
+      setTrainsets(response.results);
+    } catch (error: any) {
+      toast({
+        title: "Error Loading Fleet Data",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <RefreshCw className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   if (detailed) {
     return (
       <div className="space-y-3 sm:space-y-4">
-        {fleetData.map((train) => (
-          <Card key={train.id} className="hover:shadow-government-md transition-shadow">
+        {trainsets.map((trainset) => (
+          <Card key={trainset.id} className="hover:shadow-government-md transition-shadow">
             <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-3 sm:mb-4 gap-3">
                 <div className="flex items-center space-x-2 sm:space-x-3">
@@ -87,34 +103,36 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
                     <Train className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <h3 className="font-semibold text-sm sm:text-base truncate">{train.id}</h3>
-                    <p className="text-xs sm:text-sm text-muted-foreground truncate">{train.name}</p>
+                    <h3 className="font-semibold text-sm sm:text-base truncate">{trainset.trainset_number}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                      {typeof trainset.trainset_type === 'object' ? trainset.trainset_type.name : 'Trainset'}
+                    </p>
                   </div>
                 </div>
-                <Badge className={`${getStatusColor(train.status)} text-xs sm:text-sm px-2 py-1`}>
-                  {getStatusIcon(train.status)}
-                  <span className="ml-1 sm:ml-2">{train.status}</span>
+                <Badge className={`${getStatusColor(trainset.service_status)} text-xs sm:text-sm px-2 py-1`}>
+                  {getStatusIcon(trainset.service_status)}
+                  <span className="ml-1 sm:ml-2">{getStatusText(trainset.service_status).text}</span>
                 </Badge>
               </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Location</p>
-                  <p className="font-medium truncate">{train.location}</p>
+                  <p className="font-medium truncate">{trainset.current_depot || 'Unknown'}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Route</p>
-                  <p className="font-medium truncate">{train.route}</p>
+                  <p className="text-muted-foreground text-xs">Mileage</p>
+                  <p className="font-medium truncate">{parseFloat(trainset.total_mileage).toLocaleString()} km</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Confidence</p>
-                  <p className="font-medium">{train.confidence}%</p>
+                  <p className="text-muted-foreground text-xs">Availability</p>
+                  <p className="font-medium">{trainset.service_availability}%</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Performance</p>
+                  <p className="text-muted-foreground text-xs">Punctuality</p>
                   <div className="flex items-center space-x-2">
-                    <Progress value={train.performance} className="flex-1 h-2" />
-                    <span className="text-xs">{train.performance}%</span>
+                    <Progress value={trainset.punctuality_score} className="flex-1 h-2" />
+                    <span className="text-xs">{trainset.punctuality_score}%</span>
                   </div>
                 </div>
               </div>
@@ -127,23 +145,23 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2 sm:gap-3">
-      {fleetData.map((train) => {
-        const statusInfo = getStatusText(train.status);
+      {trainsets.map((trainset) => {
+        const statusInfo = getStatusText(trainset.service_status);
         return (
-          <Card key={train.id} className="hover:shadow-government-md transition-shadow">
+          <Card key={trainset.id} className="hover:shadow-government-md transition-shadow">
             <CardContent className="p-2 sm:p-3">
               <div className="space-y-2 sm:space-y-3">
                 {/* Train ID and Status */}
                 <div className="flex items-start justify-between">
                   <div className="text-xs sm:text-sm font-medium text-foreground truncate min-w-0 flex-1">
-                    {train.id}
+                    {trainset.trainset_number}
                   </div>
-                  <div className="w-2 h-2 rounded-full flex-shrink-0 ml-1" style={{ backgroundColor: getStatusColor(train.status).replace('bg-', '') }}></div>
+                  <div className="w-2 h-2 rounded-full flex-shrink-0 ml-1" style={{ backgroundColor: getStatusColor(trainset.service_status).includes('green') ? '#22c55e' : getStatusColor(trainset.service_status).includes('blue') ? '#3b82f6' : getStatusColor(trainset.service_status).includes('red') ? '#ef4444' : '#eab308' }}></div>
                 </div>
 
                 {/* Status Badge */}
                 <div className="flex justify-start">
-                  <Badge className={`${getStatusColor(train.status)} ${statusInfo.color} text-xs px-1.5 sm:px-2 py-0.5 sm:py-1`}>
+                  <Badge className={`${getStatusColor(trainset.service_status)} ${statusInfo.color} text-xs px-1.5 sm:px-2 py-0.5 sm:py-1`}>
                     <span className="truncate">{statusInfo.text}</span>
                   </Badge>
                 </div>
@@ -152,18 +170,20 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
                 <div className="space-y-1">
                   <div className="flex items-center space-x-1 min-w-0">
                     <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-primary flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground truncate">{train.location}</span>
+                    <span className="text-xs text-muted-foreground truncate">{trainset.current_depot || 'Unknown'}</span>
                   </div>
                   <div className="flex items-center space-x-1">
                     <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground flex-shrink-0" />
-                    <span className="text-xs text-muted-foreground">{train.lastUpdate}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(trainset.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 </div>
 
-                {/* Confidence Score */}
+                {/* Availability Score */}
                 <div className="flex items-center space-x-1">
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary/60 flex-shrink-0"></div>
-                  <span className="text-xs text-muted-foreground truncate">{train.confidence}%</span>
+                  <span className="text-xs text-muted-foreground truncate">{trainset.service_availability}%</span>
                 </div>
               </div>
             </CardContent>

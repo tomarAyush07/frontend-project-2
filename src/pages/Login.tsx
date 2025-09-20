@@ -35,7 +35,7 @@ const Login = () => {
       if (loginMethod === 'email') {
         await login({ email: credentials.email, password: credentials.password });
       } else {
-        await loginWithToken({ email: credentials.email, password: credentials.password });
+        await loginWithToken({ username: credentials.email, password: credentials.password });
       }
       
       toast({
@@ -195,10 +195,10 @@ const Login = () => {
                   <strong>Demo Mode:</strong><br className="sm:hidden" />
                   <span className="hidden sm:inline"> Use </span>
                   <span className="sm:hidden">Use </span>
-                  admin@kmrl.com / admin123<br className="sm:hidden" />
+                  admin@gmail.com / 1234<br className="sm:hidden" />
                   <span className="sm:hidden">or </span>
                   <span className="hidden sm:inline"> or </span>
-                  operator@kmrl.com / operator123
+                  any valid email / 1234
                 </p>
               </div>
 

@@ -15,6 +15,7 @@ import ScheduleAdjustment from "@/components/dashboard/ScheduleAdjustment";
 import Sidebar from "@/components/layout/Sidebar";
 import TopHeader from "@/components/layout/TopHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
+import DepotManagement from "./DepotManagement";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -126,6 +127,16 @@ const Dashboard = () => {
               <p className="text-sm sm:text-base text-muted-foreground">Intelligent scheduling and conflict resolution</p>
             </div>
             <InductionPlanner />
+          </div>
+        );
+      case "depot":
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <div>
+              {/* <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-2">Depot Management</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">Manage depot operations, stabling bays, and facility utilization</p> */}
+            </div>
+            <DepotManagement />
           </div>
         );
       case "maintenance":

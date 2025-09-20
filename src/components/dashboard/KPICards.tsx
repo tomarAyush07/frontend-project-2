@@ -83,7 +83,7 @@ const KPICards = () => {
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
       {kpiData.map((kpi, index) => (
         <Card key={index} className="hover:shadow-government-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">

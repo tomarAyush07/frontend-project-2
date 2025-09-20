@@ -1,5 +1,5 @@
-// Authentication API Service
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// Authentication API Service for KMRL Fleet Management System
+const BASE_URL = 'https://kmrl-backend-qjvw.onrender.com/api/v1/accounts';
 
 export interface LoginRequest {
   email: string;
@@ -7,7 +7,7 @@ export interface LoginRequest {
 }
 
 export interface TokenRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
@@ -17,8 +17,15 @@ export interface LoginResponse {
     id: string;
     email: string;
     employee_id?: string;
-    name?: string;
-    role?: string;
+    first_name?: string;
+    last_name?: string;
+    middle_name?: string;
+    phone_number?: string;
+    designation?: string;
+    grade?: string;
+    shift_type?: string;
+    department?: any;
+    role?: any;
   };
   message?: string;
 }
@@ -34,10 +41,60 @@ export interface ResetPasswordRequest {
   email: string;
 }
 
-export interface ApiResponse {
+export interface UserProfile {
+  id: string;
+  email: string;
+  employee_id: string;
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  phone_number?: string;
+  alternate_phone?: string;
+  designation?: string;
+  grade?: string;
+  shift_type?: string;
+  joining_date?: string;
+  department?: any;
+  role?: any;
+  receive_email_notifications?: boolean;
+  receive_sms_notifications?: boolean;
+  receive_whatsapp_notifications?: boolean;
+  notification_categories?: string[];
+  is_active?: boolean;
+}
+
+export interface UserPreferences {
+  default_dashboard?: string;
+  dashboard_refresh_interval?: number;
+  show_quick_stats?: boolean;
+  theme?: string;
+  language?: string;
+  timezone?: string;
+  date_format?: string;
+  time_format?: string;
+  default_depot_id?: string;
+  favorite_trainsets?: string[];
+  quick_filters?: Record<string, any>;
+}
+
+export interface DashboardStats {
+  total_users: number;
+  active_users: number;
+  total_trainsets: number;
+  operational_trainsets: number;
+  maintenance_due: number;
+  critical_alerts: number;
+  recent_activities: any[];
+}
+
+export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
-  data?: any;
+  data?: T;
+  results?: T[];
+  count?: number;
+  next?: string;
+  previous?: string;
 }
 
 class AuthService {
@@ -56,7 +113,7 @@ class AuthService {
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
     }
     
     return response.json();
@@ -64,46 +121,49 @@ class AuthService {
 
   // Mock login for development
   private async mockLogin(credentials: LoginRequest): Promise<LoginResponse> {
-    // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Simple validation for demo purposes
-    if (credentials.email === 'admin@kmrl.com' && credentials.password === 'admin123') {
+    if (credentials.email === 'admin@gmail.com' && credentials.password === '1234') {
       return {
         token: 'mock-jwt-token-' + Date.now(),
         user: {
           id: '1',
           email: credentials.email,
-          employee_id: 'KMRL001',
-          name: 'System Administrator',
-          role: 'admin'
+          employee_id: 'EMP001',
+          first_name: 'System',
+          last_name: 'Administrator',
+          designation: 'System Administrator',
+          grade: 'SA',
+          shift_type: 'DAY'
         },
         message: 'Mock login successful'
       };
-    } else if (credentials.email === 'operator@kmrl.com' && credentials.password === 'operator123') {
+    } else if (credentials.password === '1234') {
       return {
         token: 'mock-jwt-token-' + Date.now(),
         user: {
           id: '2',
           email: credentials.email,
-          employee_id: 'KMRL002',
-          name: 'Fleet Operator',
-          role: 'operator'
+          employee_id: 'EMP002',
+          first_name: 'Fleet',
+          last_name: 'Operator',
+          designation: 'Operations Manager',
+          grade: 'OM',
+          shift_type: 'DAY'
         },
         message: 'Mock login successful'
       };
     } else {
-      throw new Error('Invalid credentials. Try admin@kmrl.com / admin123 or operator@kmrl.com / operator123');
+      throw new Error('Invalid credentials. Use password "1234" for any email address');
     }
   }
 
   // 1. User Login
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    // Development mode: Use mock login if backend is not available
-    if (import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
-      console.warn('Development mode: Using mock login. Set VITE_API_URL to connect to backend.');
-      return this.mockLogin(credentials);
-    }
+    // if (import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
+    //   console.warn('Development mode: Using mock login. Set VITE_API_URL to connect to backend.');
+    //   return this.mockLogin(credentials);
+    // }
 
     try {
       const response = await fetch(`${BASE_URL}/auth/login/`, {
@@ -114,7 +174,6 @@ class AuthService {
 
       return this.handleResponse<LoginResponse>(response);
     } catch (error) {
-      // If fetch fails (network error), try mock login in development
       if (import.meta.env.DEV) {
         console.warn('Backend unavailable, using mock login:', error);
         return this.mockLogin(credentials);
@@ -125,10 +184,8 @@ class AuthService {
 
   // 2. Get Auth Token (Alternative login method)
   async getToken(credentials: TokenRequest): Promise<LoginResponse> {
-    // Development mode: Use mock login if backend is not available
     if (import.meta.env.DEV && !import.meta.env.VITE_API_URL) {
-      console.warn('Development mode: Using mock token login. Set VITE_API_URL to connect to backend.');
-      return this.mockLogin(credentials);
+      return this.mockLogin({ email: credentials.username, password: credentials.password });
     }
 
     try {
@@ -140,10 +197,8 @@ class AuthService {
 
       return this.handleResponse<LoginResponse>(response);
     } catch (error) {
-      // If fetch fails (network error), try mock login in development
       if (import.meta.env.DEV) {
-        console.warn('Backend unavailable, using mock token login:', error);
-        return this.mockLogin(credentials);
+        return this.mockLogin({ email: credentials.username, password: credentials.password });
       }
       throw error;
     }
@@ -181,45 +236,100 @@ class AuthService {
     return this.handleResponse<ApiResponse>(response);
   }
 
-  // Utility method to get stored token
+  // 6. Get User Profile
+  async getProfile(token: string): Promise<UserProfile> {
+    const response = await fetch(`${BASE_URL}/profile/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<UserProfile>(response);
+  }
+
+  // 7. Update User Profile
+  async updateProfile(token: string, profileData: Partial<UserProfile>): Promise<UserProfile> {
+    const response = await fetch(`${BASE_URL}/profile/`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(profileData),
+    });
+
+    return this.handleResponse<UserProfile>(response);
+  }
+
+  // 8. Partial Update User Profile
+  async patchProfile(token: string, profileData: Partial<UserProfile>): Promise<UserProfile> {
+    const response = await fetch(`${BASE_URL}/profile/`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(profileData),
+    });
+
+    return this.handleResponse<UserProfile>(response);
+  }
+
+  // 9. Get User Preferences
+  async getPreferences(token: string): Promise<UserPreferences> {
+    const response = await fetch(`${BASE_URL}/preferences/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<UserPreferences>(response);
+  }
+
+  // 10. Update User Preferences
+  async updatePreferences(token: string, preferences: UserPreferences): Promise<UserPreferences> {
+    const response = await fetch(`${BASE_URL}/preferences/`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(preferences),
+    });
+
+    return this.handleResponse<UserPreferences>(response);
+  }
+
+  // 11. Get Dashboard Statistics
+  async getDashboardStats(token: string): Promise<DashboardStats> {
+    const response = await fetch(`${BASE_URL}/dashboard/stats/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<DashboardStats>(response);
+  }
+
+  // Utility methods
   getStoredToken(): string | null {
     return localStorage.getItem('kmrl-auth-token');
   }
 
-  // Utility method to store token
   storeToken(token: string): void {
     localStorage.setItem('kmrl-auth-token', token);
   }
 
-  // Utility method to remove token
   removeToken(): void {
     localStorage.removeItem('kmrl-auth-token');
   }
 
-  // Utility method to get stored user data
-  getStoredUser(): any | null {
+  getStoredUser(): UserProfile | null {
     const userData = localStorage.getItem('kmrl-user-data');
     return userData ? JSON.parse(userData) : null;
   }
 
-  // Utility method to store user data
-  storeUser(user: any): void {
+  storeUser(user: UserProfile): void {
     localStorage.setItem('kmrl-user-data', JSON.stringify(user));
   }
 
-  // Utility method to remove user data
   removeUser(): void {
     localStorage.removeItem('kmrl-user-data');
   }
 
-  // Check if user is authenticated
   isAuthenticated(): boolean {
     const token = this.getStoredToken();
     return !!token;
   }
 }
 
-// Export singleton instance
 export const authService = new AuthService();
 export default authService;
-

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { userService, User, Department, Role, CreateUserRequest } from "@/services/users";
+import { toast } from "@/hooks/use-toast";
 import { 
   Users, 
   UserPlus, 
@@ -27,158 +30,131 @@ import {
   Activity,
   Settings,
   Eye,
-  Download
+  Download,
+  RefreshCw
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const UserManagement = () => {
+  const { token } = useAuth();
+  const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
+  const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [newUser, setNewUser] = useState<CreateUserRequest>({
+    employee_id: '',
+    email: '',
+    password: '',
+    password_confirm: '',
+    first_name: '',
+    last_name: '',
+    phone_number: '',
+    designation: '',
+    shift_type: 'DAY'
+  });
 
-  // Mock user data for KMRL operations
-  const users = [
-    {
-      id: "EMP001",
-      name: "Rajesh Kumar",
-      email: "rajesh.kumar@kmrl.gov.in",
-      phone: "+91 98765 43210",
-      role: "Operations Manager",
-      department: "Operations Control Center",
-      status: "Active",
-      lastLogin: "2 hours ago",
-      joinDate: "2022-03-15",
-      location: "Aluva Depot",
-      avatar: "",
-      permissions: ["fleet_management", "scheduling", "analytics"],
-      shift: "Day Shift (06:00-18:00)",
-      employeeId: "KMRL-EMP-001",
-      accessLevel: "Level 3"
-    },
-    {
-      id: "EMP002",
-      name: "Priya Menon",
-      email: "priya.menon@kmrl.gov.in",
-      phone: "+91 98765 43211",
-      role: "Fleet Supervisor",
-      department: "Fleet Operations",
-      status: "Active",
-      lastLogin: "1 hour ago",
-      joinDate: "2021-08-22",
-      location: "Pettah Depot",
-      avatar: "",
-      permissions: ["fleet_management", "maintenance"],
-      shift: "Night Shift (18:00-06:00)",
-      employeeId: "KMRL-EMP-002",
-      accessLevel: "Level 2"
-    },
-    {
-      id: "EMP003",
-      name: "Suresh Nair",
-      email: "suresh.nair@kmrl.gov.in",
-      phone: "+91 98765 43212",
-      role: "Maintenance Engineer",
-      department: "Maintenance & Engineering",
-      status: "Active",
-      lastLogin: "30 minutes ago",
-      joinDate: "2020-11-10",
-      location: "Kalamassery Depot",
-      avatar: "",
-      permissions: ["maintenance", "analytics"],
-      shift: "Day Shift (06:00-18:00)",
-      employeeId: "KMRL-EMP-003",
-      accessLevel: "Level 2"
-    },
-    {
-      id: "EMP004",
-      name: "Anita Thomas",
-      email: "anita.thomas@kmrl.gov.in",
-      phone: "+91 98765 43213",
-      role: "System Administrator",
-      department: "IT & Digital Systems",
-      status: "Active",
-      lastLogin: "15 minutes ago",
-      joinDate: "2023-01-05",
-      location: "Head Office",
-      avatar: "",
-      permissions: ["user_management", "system_settings", "analytics"],
-      shift: "Day Shift (09:00-18:00)",
-      employeeId: "KMRL-EMP-004",
-      accessLevel: "Level 4"
-    },
-    {
-      id: "EMP005",
-      name: "Vikram Singh",
-      email: "vikram.singh@kmrl.gov.in",
-      phone: "+91 98765 43214",
-      role: "Operations Analyst",
-      department: "Operations Control Center",
-      status: "Inactive",
-      lastLogin: "3 days ago",
-      joinDate: "2022-07-18",
-      location: "Aluva Depot",
-      avatar: "",
-      permissions: ["analytics", "scheduling"],
-      shift: "Day Shift (06:00-18:00)",
-      employeeId: "KMRL-EMP-005",
-      accessLevel: "Level 1"
-    },
-    {
-      id: "EMP006",
-      name: "Deepa Rajan",
-      email: "deepa.rajan@kmrl.gov.in",
-      phone: "+91 98765 43215",
-      role: "Fleet Coordinator",
-      department: "Fleet Operations",
-      status: "Active",
-      lastLogin: "45 minutes ago",
-      joinDate: "2021-12-03",
-      location: "Pettah Depot",
-      avatar: "",
-      permissions: ["fleet_management", "scheduling"],
-      shift: "Evening Shift (14:00-22:00)",
-      employeeId: "KMRL-EMP-006",
-      accessLevel: "Level 2"
+  useEffect(() => {
+    if (token) {
+      loadUserData();
     }
-  ];
+  }, [token]);
 
-  const roles = [
-    "Operations Manager",
-    "Fleet Supervisor", 
-    "Maintenance Engineer",
-    "System Administrator",
-    "Operations Analyst",
-    "Fleet Coordinator"
-  ];
+  const loadUserData = async () => {
+    try {
+      setLoading(true);
+      const [usersResponse, departmentsResponse, rolesResponse] = await Promise.all([
+        userService.getUsers(token!),
+        userService.getDepartments(token!),
+        userService.getRoles(token!)
+      ]);
+      
+      setUsers(usersResponse.results);
+      setDepartments(departmentsResponse.results);
+      setRoles(rolesResponse.results);
+    } catch (error: any) {
+      toast({
+        title: "Error Loading User Data",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const departments = [
-    "Operations Control Center",
-    "Fleet Operations",
-    "Maintenance & Engineering",
-    "IT & Digital Systems"
-  ];
+  const handleCreateUser = async () => {
+    try {
+      if (!newUser.employee_id || !newUser.email || !newUser.password || !newUser.first_name || !newUser.last_name) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
 
-  const getStatusColor = (status: string) => {
+      if (newUser.password !== newUser.password_confirm) {
+        toast({
+          title: "Validation Error",
+          description: "Passwords do not match",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await userService.createUser(token!, newUser);
+      toast({
+        title: "Success",
+        description: "User created successfully",
+      });
+      setShowCreateDialog(false);
+      setNewUser({
+        employee_id: '',
+        email: '',
+        password: '',
+        password_confirm: '',
+        first_name: '',
+        last_name: '',
+        phone_number: '',
+        designation: '',
+        shift_type: 'DAY'
+      });
+      loadUserData();
+    } catch (error: any) {
+      toast({
+        title: "Error Creating User",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const getStatusColor = (status: string | boolean) => {
     switch (status) {
-      case 'Active': return 'bg-success text-success-foreground';
-      case 'Inactive': return 'bg-muted text-muted-foreground';
-      case 'Suspended': return 'bg-destructive text-destructive-foreground';
-      default: return 'bg-muted text-muted-foreground';
+      case true:
+      case 'true':
+      case 'Active':
+        return 'bg-success text-success-foreground';
+      case false:
+      case 'false':
+      case 'Inactive':
+        return 'bg-muted text-muted-foreground';
+      default:
+        return 'bg-muted text-muted-foreground';
     }
   };
 
-  const getAccessLevelColor = (level: string) => {
-    switch (level) {
-      case 'Level 4': return 'bg-destructive text-destructive-foreground';
-      case 'Level 3': return 'bg-warning text-warning-foreground';
-      case 'Level 2': return 'bg-info text-info-foreground';
-      case 'Level 1': return 'bg-success text-success-foreground';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
-
-  const getRoleIcon = (role: string) => {
-    switch (role) {
+  const getRoleIcon = (roleType: string) => {
+    switch (roleType) {
+      case 'ADMIN': return <Shield className="h-4 w-4" />;
+      case 'SUPERVISOR': return <Users className="h-4 w-4" />;
+      case 'TECHNICIAN': return <Settings className="h-4 w-4" />;
+      case 'OPERATOR': return <Activity className="h-4 w-4" />;
+      case 'VIEWER': return <Eye className="h-4 w-4" />;
       case 'Operations Manager': return <Shield className="h-4 w-4" />;
       case 'Fleet Supervisor': return <Users className="h-4 w-4" />;
       case 'Maintenance Engineer': return <Settings className="h-4 w-4" />;
@@ -190,21 +166,33 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const fullName = `${user.first_name} ${user.last_name}`.trim();
+    const matchesSearch = fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.employeeId.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === "all" || user.role === selectedRole;
-    const matchesStatus = selectedStatus === "all" || user.status === selectedStatus;
+                         user.employee_id.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesRole = selectedRole === "all" || (user.role && (typeof user.role === 'object' ? user.role.name : user.role) === selectedRole);
+    const matchesStatus = selectedStatus === "all" || (user.is_active ? 'Active' : 'Inactive') === selectedStatus;
     
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const userStats = {
     total: users.length,
-    active: users.filter(u => u.status === 'Active').length,
-    inactive: users.filter(u => u.status === 'Inactive').length,
-    online: users.filter(u => u.lastLogin.includes('hour') || u.lastLogin.includes('minutes')).length
+    active: users.filter(u => u.is_active).length,
+    inactive: users.filter(u => !u.is_active).length,
+    online: users.filter(u => u.last_login && new Date(u.last_login) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p>Loading user data...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -215,12 +203,17 @@ const UserManagement = () => {
           <p className="text-sm sm:text-base text-muted-foreground">Manage KMRL staff access and permissions for fleet operations</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={loadUserData}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Refresh</span>
+            <span className="sm:hidden">Refresh</span>
+          </Button>
           <Button variant="outline" size="sm" className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Export Users</span>
             <span className="sm:hidden">Export</span>
           </Button>
-          <Dialog>
+          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button className="btn-government w-full sm:w-auto">
                 <UserPlus className="h-4 w-4 mr-2" />
@@ -235,65 +228,130 @@ const UserManagement = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="name" className="text-sm">Full Name</Label>
-                    <Input id="name" placeholder="Enter full name" className="h-10" />
+                    <Label htmlFor="employee_id" className="text-sm">Employee ID *</Label>
+                    <Input 
+                      id="employee_id" 
+                      placeholder="EMP001" 
+                      value={newUser.employee_id}
+                      onChange={(e) => setNewUser({...newUser, employee_id: e.target.value})}
+                      className="h-10" 
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="email" className="text-sm">Email Address</Label>
-                    <Input id="email" type="email" placeholder="user@kmrl.gov.in" className="h-10" />
+                    <Label htmlFor="email" className="text-sm">Email Address *</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="user@kmrl.gov.in" 
+                      value={newUser.email}
+                      onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                      className="h-10" 
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="phone" className="text-sm">Phone Number</Label>
-                    <Input id="phone" placeholder="+91 98765 43210" className="h-10" />
+                    <Label htmlFor="first_name" className="text-sm">First Name *</Label>
+                    <Input 
+                      id="first_name" 
+                      placeholder="John" 
+                      value={newUser.first_name}
+                      onChange={(e) => setNewUser({...newUser, first_name: e.target.value})}
+                      className="h-10" 
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="role" className="text-sm">Role</Label>
-                    <Select>
-                      <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {roles.map(role => (
-                          <SelectItem key={role} value={role}>{role}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="last_name" className="text-sm">Last Name *</Label>
+                    <Input 
+                      id="last_name" 
+                      placeholder="Doe" 
+                      value={newUser.last_name}
+                      onChange={(e) => setNewUser({...newUser, last_name: e.target.value})}
+                      className="h-10" 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="password" className="text-sm">Password *</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="Enter password" 
+                      value={newUser.password}
+                      onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                      className="h-10" 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="password_confirm" className="text-sm">Confirm Password *</Label>
+                    <Input 
+                      id="password_confirm" 
+                      type="password" 
+                      placeholder="Confirm password" 
+                      value={newUser.password_confirm}
+                      onChange={(e) => setNewUser({...newUser, password_confirm: e.target.value})}
+                      className="h-10" 
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="phone_number" className="text-sm">Phone Number</Label>
+                    <Input 
+                      id="phone_number" 
+                      placeholder="+91 98765 43210" 
+                      value={newUser.phone_number}
+                      onChange={(e) => setNewUser({...newUser, phone_number: e.target.value})}
+                      className="h-10" 
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="designation" className="text-sm">Designation</Label>
+                    <Input 
+                      id="designation" 
+                      placeholder="Operations Manager" 
+                      value={newUser.designation}
+                      onChange={(e) => setNewUser({...newUser, designation: e.target.value})}
+                      className="h-10" 
+                    />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="department" className="text-sm">Department</Label>
-                    <Select>
+                    <Select value={newUser.department} onValueChange={(value) => setNewUser({...newUser, department: value})}>
                       <SelectTrigger className="h-10">
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
                       <SelectContent>
-                        {departments.map(dept => (
-                          <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                        {roles.map(role => (
+                          <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="location" className="text-sm">Location</Label>
-                    <Select>
+                    <Label htmlFor="shift_type" className="text-sm">Shift Type</Label>
+                    <Select value={newUser.shift_type} onValueChange={(value) => setNewUser({...newUser, shift_type: value as any})}>
                       <SelectTrigger className="h-10">
-                        <SelectValue placeholder="Select location" />
+                        <SelectValue placeholder="Select shift" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Aluva Depot">Aluva Depot</SelectItem>
-                        <SelectItem value="Pettah Depot">Pettah Depot</SelectItem>
-                        <SelectItem value="Kalamassery Depot">Kalamassery Depot</SelectItem>
-                        <SelectItem value="Head Office">Head Office</SelectItem>
+                        <SelectItem value="DAY">Day Shift</SelectItem>
+                        <SelectItem value="NIGHT">Night Shift</SelectItem>
+                        <SelectItem value="ROTATING">Rotating Shift</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row justify-end gap-2 pt-4">
-                  <Button variant="outline" className="w-full sm:w-auto">Cancel</Button>
-                  <Button className="btn-government w-full sm:w-auto">Add User</Button>
+                  <Button variant="outline" className="w-full sm:w-auto" onClick={() => setShowCreateDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button className="btn-government w-full sm:w-auto" onClick={handleCreateUser}>
+                    Add User
+                  </Button>
                 </div>
               </div>
             </DialogContent>
@@ -380,7 +438,7 @@ const UserManagement = () => {
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
                   {roles.map(role => (
-                    <SelectItem key={role} value={role}>{role}</SelectItem>
+                    <SelectItem key={role.id} value={role.name}>{role.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -416,21 +474,27 @@ const UserManagement = () => {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
                       <Avatar className="h-10 w-10">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src="" />
                         <AvatarFallback className="bg-primary/10 text-primary font-semibold text-sm">
-                          {user.name.split(' ').map(n => n[0]).join('')}
+                          {user.first_name[0]}{user.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-foreground text-sm truncate">{user.name}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{user.role}</p>
+                        <h3 className="font-semibold text-foreground text-sm truncate">
+                          {user.first_name} {user.last_name}
+                        </h3>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {user.role ? (typeof user.role === 'object' ? user.role.name : user.role) : user.designation}
+                        </p>
                         <div className="flex items-center gap-1 mt-1">
-                          <Badge className={`${getStatusColor(user.status)} text-xs px-1.5 py-0.5`} variant="secondary">
-                            {user.status}
+                          <Badge className={`${getStatusColor(user.is_active)} text-xs px-1.5 py-0.5`} variant="secondary">
+                            {user.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                          <Badge className={`${getAccessLevelColor(user.accessLevel)} text-xs px-1.5 py-0.5`} variant="outline">
-                            {user.accessLevel}
-                          </Badge>
+                          {user.grade && (
+                            <Badge variant="outline" className="text-xs px-1.5 py-0.5">
+                              {user.grade}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -466,39 +530,37 @@ const UserManagement = () => {
                       <Mail className="h-3 w-3" />
                       <span className="truncate">{user.email}</span>
                     </div>
+                    {user.phone_number && (
                     <div className="flex items-center space-x-1">
                       <Phone className="h-3 w-3" />
-                      <span>{user.phone}</span>
+                      <span>{user.phone_number}</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <MapPin className="h-3 w-3" />
-                      <span>{user.location}</span>
-                    </div>
+                    )}
+                    {user.department && (
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="h-3 w-3" />
+                        <span>{typeof user.department === 'object' ? user.department.name : user.department}</span>
+                      </div>
+                    )}
+                    {user.last_login && (
                     <div className="flex items-center space-x-1">
                       <Clock className="h-3 w-3" />
-                      <span>Last login: {user.lastLogin}</span>
+                      <span>Last login: {new Date(user.last_login).toLocaleString()}</span>
                     </div>
+                    )}
                   </div>
                   
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="space-y-2">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Permissions</p>
-                        <div className="flex flex-wrap gap-1">
-                          {user.permissions.slice(0, 2).map(permission => (
-                            <Badge key={permission} variant="outline" className="text-xs">
-                              {permission.replace('_', ' ')}
-                            </Badge>
-                          ))}
-                          {user.permissions.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{user.permissions.length - 2} more
-                            </Badge>
-                          )}
-                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">Employee Details</p>
+                        <p className="text-xs">ID: {user.employee_id}</p>
+                        {user.designation && <p className="text-xs">Designation: {user.designation}</p>}
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Shift: {user.shift}</p>
+                        <p className="text-xs text-muted-foreground">
+                          Shift: {user.shift_type ? user.shift_type.replace('_', ' ') : 'Not specified'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -509,21 +571,23 @@ const UserManagement = () => {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.avatar} />
+                        <AvatarImage src="" />
                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {user.name.split(' ').map(n => n[0]).join('')}
+                          {user.first_name[0]}{user.last_name[0]}
                         </AvatarFallback>
                       </Avatar>
                       
                       <div className="space-y-1">
                         <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold text-foreground">{user.name}</h3>
-                          <Badge className={getStatusColor(user.status)} variant="secondary">
-                            {user.status}
+                          <h3 className="font-semibold text-foreground">{user.first_name} {user.last_name}</h3>
+                          <Badge className={getStatusColor(user.is_active)} variant="secondary">
+                            {user.is_active ? 'Active' : 'Inactive'}
                           </Badge>
-                          <Badge className={getAccessLevelColor(user.accessLevel)} variant="outline">
-                            {user.accessLevel}
-                          </Badge>
+                          {user.grade && (
+                            <Badge variant="outline">
+                              {user.grade}
+                            </Badge>
+                          )}
                         </div>
                         
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -531,14 +595,18 @@ const UserManagement = () => {
                             <Mail className="h-3 w-3" />
                             <span>{user.email}</span>
                           </div>
+                          {user.phone_number && (
                           <div className="flex items-center space-x-1">
                             <Phone className="h-3 w-3" />
-                            <span>{user.phone}</span>
+                            <span>{user.phone_number}</span>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <MapPin className="h-3 w-3" />
-                            <span>{user.location}</span>
-                          </div>
+                          )}
+                          {user.department && (
+                            <div className="flex items-center space-x-1">
+                              <MapPin className="h-3 w-3" />
+                              <span>{typeof user.department === 'object' ? user.department.name : user.department}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -546,15 +614,21 @@ const UserManagement = () => {
                     <div className="flex items-center space-x-4">
                       <div className="text-right space-y-1">
                         <div className="flex items-center space-x-2">
-                          {getRoleIcon(user.role)}
-                          <span className="text-sm font-medium">{user.role}</span>
+                          {getRoleIcon(user.role ? (typeof user.role === 'object' ? user.role.role_type : user.role) : 'VIEWER')}
+                          <span className="text-sm font-medium">
+                            {user.role ? (typeof user.role === 'object' ? user.role.name : user.role) : user.designation}
+                          </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">{user.department}</p>
-                        <p className="text-xs text-muted-foreground">ID: {user.employeeId}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {user.department ? (typeof user.department === 'object' ? user.department.name : user.department) : 'No Department'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">ID: {user.employee_id}</p>
+                        {user.last_login && (
                         <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
-                          <span>Last login: {user.lastLogin}</span>
+                          <span>Last login: {new Date(user.last_login).toLocaleString()}</span>
                         </div>
+                        )}
                       </div>
                       
                       <DropdownMenu>
@@ -589,19 +663,17 @@ const UserManagement = () => {
                   <div className="mt-4 flex items-center justify-between">
                     <div className="flex items-center space-x-4">
                       <div>
-                        <p className="text-xs text-muted-foreground mb-1">Permissions</p>
-                        <div className="flex space-x-1">
-                          {user.permissions.map(permission => (
-                            <Badge key={permission} variant="outline" className="text-xs">
-                              {permission.replace('_', ' ')}
-                            </Badge>
-                          ))}
-                        </div>
+                        <p className="text-xs text-muted-foreground mb-1">Employee Information</p>
+                        <p className="text-xs">ID: {user.employee_id}</p>
+                        {user.designation && <p className="text-xs">Designation: {user.designation}</p>}
+                        {user.joining_date && <p className="text-xs">Joined: {new Date(user.joining_date).toLocaleDateString()}</p>}
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="text-xs text-muted-foreground mb-1">Shift Schedule</p>
-                      <p className="text-sm font-medium">{user.shift}</p>
+                      <p className="text-sm font-medium">
+                        {user.shift_type ? user.shift_type.replace('_', ' ') + ' Shift' : 'Not specified'}
+                      </p>
                     </div>
                   </div>
                 </div>

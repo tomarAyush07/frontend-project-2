@@ -30,9 +30,10 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, onTabChange, isCollapsed, 
   const navigationItems = [
     { id: "dashboard", icon: BarChart3, label: "Dashboard", section: "Operations" },
     { id: "fleet", icon: Train, label: "Fleet Management", section: "Operations" },
+    { id: "depot", icon: Grid3X3, label: "Depot Management", section: "Operations" },
     { id: "scheduling", icon: Calendar, label: "Scheduling", section: "Operations" },
     { id: "maintenance", icon: Wrench, label: "Maintenance", section: "Operations" },
-    { id: "analytics", icon: Grid3X3, label: "Analytics", section: "Operations" },
+    { id: "analytics", icon: BarChart3, label: "Analytics", section: "Operations" },
     { id: "users", icon: Users, label: "User Management", section: "Administration" },
     { id: "settings", icon: Settings, label: "System Settings", section: "Administration" },
     { id: "alerts", icon: AlertTriangle, label: "Alerts & Logs", section: "Administration", badge: alertCount > 0 ? alertCount.toString() : undefined }
