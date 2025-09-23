@@ -10,6 +10,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import FleetManagement from "./pages/FleetManagement";
 import DepotManagement from "./pages/DepotManagement";
 import NotFound from "./pages/NotFound";
+import Fitness from "./pages/Fitness";
 import './i18n';
 
 const queryClient = new QueryClient();
@@ -35,7 +36,7 @@ const App = () => {
                 <Dashboard />
               </ProtectedRoute>
             } />
-            {/* <Route path="/fleet" element={
+            <Route path="/fleet" element={
               <ProtectedRoute>
                 <FleetManagement />
               </ProtectedRoute>
@@ -44,7 +45,8 @@ const App = () => {
               <ProtectedRoute>
                 <DepotManagement />
               </ProtectedRoute>
-            } /> */}
+            } />
+            <Route path="/fitness" element={<Fitness />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
