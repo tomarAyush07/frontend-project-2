@@ -27,6 +27,7 @@
     "fleetManagement": "Fleet Management",
     "scheduling": "Scheduling",
     "DepotManagement": "Depot Management",
+    "fitness": "Fitness",
     "maintenance": "Maintenance",
     "analytics": "Analytics",
     "userManagement": "User Management",
@@ -34,6 +35,70 @@
     "alertsLogs": "Alerts & Logs",
     "operations": "Operations",
     "administration": "Administration"
+  },
+  "fitness": {
+    "title": "Fitness Certification for Metro Rail Projects",
+    "subtitle": "Ensuring passenger safety and operational readiness before launch.",
+    "badges": {
+      "safety": "Safety First",
+      "cmrs": "CMRS Protocol",
+      "readiness": "Operational Readiness"
+    },
+    "whatIs": {
+      "title": "What is Fitness Certification?",
+      "body": "Fitness Certification is conducted by the Commissioner of Metro Railway Safety (CMRS) and is mandatory before any section is opened to the public. It verifies safety, signalling, track and civil works, rolling stock, fire systems, communications, evacuation procedures, and emergency response readiness."
+    },
+    "download": {
+      "title": "Download",
+      "certReport": "Download Certification Report (PDF)",
+      "safetyAudit": "Download Safety Audit (PDF)",
+      "note": "Sample documents for demo purposes."
+    },
+    "timeline": {
+      "title": "Certification Timeline",
+      "inline": "Track laying complete → Trial Runs → CMRS Inspection → Certification → Public Operations",
+      "step": "Step {{n}}",
+      "cardNote": "Milestone towards safe commissioning.",
+      "steps": {
+        "track": "Track Laying Complete",
+        "trial": "Trial Runs",
+        "cmrs": "CMRS Inspection",
+        "cert": "Certification",
+        "ops": "Public Operations"
+      }
+    },
+    "highlights": {
+      "title": "Inspection Highlights",
+      "items": {
+        "safety": { "title": "Safety systems", "desc": "Signalling, PSDs, ATS/CBTC checks" },
+        "evac": { "title": "Evacuation drills", "desc": "Mock drills and passenger flow" },
+        "rolling": { "title": "Rolling stock checks", "desc": "Brakes, doors, propulsion" },
+        "emergency": { "title": "Emergency readiness", "desc": "Fire, medical, comms" }
+      }
+    },
+    "updates": {
+      "title": "Recent Updates / Notices",
+      "live": "Live",
+      "notice": "Notice {{n}}",
+      "items": [
+        "Yellow Line Extension received CMRS clearance on 15 Sept 2025.",
+        "Trial runs completed on Blue Line, certification expected soon.",
+        "Fire safety drill completed across Red Line depots."
+      ]
+    },
+    "authority": {
+      "title": "Certifying Authority",
+      "body": "The Commissioner of Metro Railway Safety (CMRS) is the statutory authority responsible for safety certification of metro rail projects in India. CMRS conducts inspections, audits, and trials before granting authorization for commencement of public operations.",
+      "stamp": "CERTIFIED",
+      "org": "CMRS India",
+      "tagline": "Safety Certification & Oversight"
+    },
+    "contact": {
+      "title": "Contact & Queries",
+      "email": "Email: certification@example.metro",
+      "helpline": "Helpline: +91-11-1234-5678",
+      "hours": "Office Hours: Mon–Fri, 10:00–17:00"
+    }
   },
   "login": {
     "title": "Kochi Metro Rail",

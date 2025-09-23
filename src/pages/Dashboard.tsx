@@ -17,6 +17,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import TopHeader from "@/components/layout/TopHeader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import DepotManagement from "./DepotManagement";
+import Fitness from "./Fitness";
 
 const Dashboard = () => {
   const { t } = useTranslation();
@@ -141,6 +142,8 @@ const Dashboard = () => {
             <DepotManagement />
           </div>
         );
+      case "fitness":
+        return <Fitness />;
       case "maintenance":
         return (
           <div className="space-y-4 sm:space-y-6">
