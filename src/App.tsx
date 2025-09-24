@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import FleetManagement from "./pages/FleetManagement";
 import DepotManagement from "./pages/DepotManagement";
+import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Fitness from "./pages/Fitness";
 import './i18n';
@@ -30,7 +31,8 @@ const App = () => {
             }}
           >
             <Routes>
-            <Route path="/" element={<Login />} />
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />

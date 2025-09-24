@@ -118,7 +118,7 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 text-xs sm:text-sm">
                 <div>
                   <p className="text-muted-foreground text-xs">Location</p>
-                  <p className="font-medium truncate">{trainset.current_depot || 'Unknown'}</p>
+                  <p className="font-medium truncate">{trainset.current_depot || 'Muttom Depot'}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Mileage</p>

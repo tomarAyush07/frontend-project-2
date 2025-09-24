@@ -56,11 +56,26 @@ const Login = () => {
     }
   };
 
+  const handleBackToHome = () => {
+    navigate("/");
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary via-primary-hover to-primary-light flex items-center justify-center p-2 sm:p-4">
       {/* Language Selector - Top Right */}
       <div className="absolute top-4 right-4 z-10">
         <LanguageSelector />
+      </div>
+      
+      {/* Back to Home - Top Left */}
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToHome}
+          className="text-white hover:bg-white/10 hover:text-white"
+        >
+          ← Back to Home
+        </Button>
       </div>
       
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-4 lg:gap-8 items-center">
