@@ -204,9 +204,6 @@ const Login = () => {
                   <span className="hidden sm:inline"> Use </span>
                   <span className="sm:hidden">Use </span>
                   admin@gmail.com / Ayush@1234<br className="sm:hidden" />
-                  <span className="sm:hidden">or </span>
-                  <span className="hidden sm:inline"> or </span>
-                  any valid email / 1234
                 </p>
               </div>
 
