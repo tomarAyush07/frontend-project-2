@@ -116,7 +116,7 @@
     "loginFailed": "Login Failed",
     "validationError": "Validation Error",
     "enterBothCredentials": "Please enter both email and password",
-    "demoMode": "Demo Mode:",
+    "demoMode": "Demo Credentials:",
     "useCredentials": "Use admin@kmrl.com / admin123 or operator@kmrl.com / operator123",
     "governmentKerala": "Government of Kerala • Kochi Metro Rail Limited",
     "features": {
