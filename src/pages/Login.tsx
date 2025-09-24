@@ -50,7 +50,7 @@ const Login = () => {
       console.error("Login error:", error);
       toast({
         title: t('login.loginFailed'),
-        description: error.message || "Failed to connect to server. Please check your connection and try again.",
+        description: error.message || "Please check your credentials and try again.",
         variant: "destructive",
       });
     }
@@ -218,7 +218,7 @@ const Login = () => {
                   <strong>{t('login.demoMode')}</strong><br className="sm:hidden" />
                   <span className="hidden sm:inline"> Use </span>
                   <span className="sm:hidden">Use </span>
-                  admin@gmail.com / Ayush@1234<br className="sm:hidden" />
+                  admin@gmail.com / Ayush@1234
                 </p>
               </div>
 

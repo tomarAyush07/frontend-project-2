@@ -34,6 +34,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Textarea } from "@/components/ui/textarea";
 
 const UserManagement = () => {
   const { token } = useAuth();
@@ -56,6 +57,10 @@ const UserManagement = () => {
     designation: '',
     shift_type: 'DAY'
   });
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [roleAssignment, setRoleAssignment] = useState({ userId: '', roleId: '', validUntil: '', reason: '' });
 
   useEffect(() => {
     if (token) {
@@ -127,6 +132,112 @@ const UserManagement = () => {
     } catch (error: any) {
       toast({
         title: "Error Creating User",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEditUser = async () => {
+    try {
+      if (!editingUser) return;
+
+      await userService.updateUser(token!, editingUser.id, editingUser);
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+      setShowEditDialog(false);
+      setEditingUser(null);
+      loadUserData();
+    } catch (error: any) {
+      toast({
+        title: "Error Updating User",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAssignRole = async () => {
+    try {
+      if (!roleAssignment.userId || !roleAssignment.roleId) {
+        toast({
+          title: "Validation Error",
+          description: "Please select user and role",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await userService.assignRole(token!, roleAssignment.userId, {
+        role_id: roleAssignment.roleId,
+        valid_until: roleAssignment.validUntil || undefined,
+        assignment_reason: roleAssignment.reason || undefined
+      });
+      toast({
+        title: "Success",
+        description: "Role assigned successfully",
+      });
+      setShowRoleDialog(false);
+      setRoleAssignment({ userId: '', roleId: '', validUntil: '', reason: '' });
+      loadUserData();
+    } catch (error: any) {
+      toast({
+        title: "Error Assigning Role",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleResetPassword = async (userId: string) => {
+    try {
+      await userService.resetUserPassword(token!, userId);
+      toast({
+        title: "Success",
+        description: "Password reset email sent to user",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error Resetting Password",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLockAccount = async (userId: string) => {
+    try {
+      await userService.lockAccount(token!, userId, {
+        duration_minutes: 60,
+        reason: "Manual lock by administrator"
+      });
+      toast({
+        title: "Success",
+        description: "User account locked for 60 minutes",
+      });
+      loadUserData();
+    } catch (error: any) {
+      toast({
+        title: "Error Locking Account",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUnlockAccount = async (userId: string) => {
+    try {
+      await userService.unlockAccount(token!, userId);
+      toast({
+        title: "Success",
+        description: "User account unlocked successfully",
+      });
+      loadUserData();
+    } catch (error: any) {
+      toast({
+        title: "Error Unlocking Account",
         description: error.message,
         variant: "destructive",
       });
@@ -505,17 +616,33 @@ const UserManagement = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setEditingUser(user); setShowEditDialog(true); }}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setEditingUser(user); setShowEditDialog(true); }}>
                           <Edit className="h-4 w-4 mr-2" />
                           Edit User
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => { setRoleAssignment({...roleAssignment, userId: user.id}); setShowRoleDialog(true); }}>
                           <Settings className="h-4 w-4 mr-2" />
                           Manage Permissions
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleResetPassword(user.id)}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Reset Password
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => user.is_active ? handleLockAccount(user.id) : handleUnlockAccount(user.id)}>
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          {user.is_active ? 'Lock Account' : 'Unlock Account'}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleResetPassword(user.id)}>
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Reset Password
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleLockAccount(user.id)}>
+                          <AlertTriangle className="h-4 w-4 mr-2" />
+                          Lock Account
                         </DropdownMenuItem>
                         <DropdownMenuItem className="text-destructive">
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -682,6 +809,113 @@ const UserManagement = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Edit User Dialog */}
+      {editingUser && (
+        <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit User: {editingUser.first_name} {editingUser.last_name}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_first_name">First Name *</Label>
+                  <Input 
+                    id="edit_first_name" 
+                    value={editingUser.first_name}
+                    onChange={(e) => setEditingUser({...editingUser, first_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_last_name">Last Name *</Label>
+                  <Input 
+                    id="edit_last_name" 
+                    value={editingUser.last_name}
+                    onChange={(e) => setEditingUser({...editingUser, last_name: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="edit_phone">Phone Number</Label>
+                  <Input 
+                    id="edit_phone" 
+                    value={editingUser.phone_number || ''}
+                    onChange={(e) => setEditingUser({...editingUser, phone_number: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit_designation">Designation</Label>
+                  <Input 
+                    id="edit_designation" 
+                    value={editingUser.designation || ''}
+                    onChange={(e) => setEditingUser({...editingUser, designation: e.target.value})}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-2">
+                <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleEditUser}>
+                  Update User
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Role Assignment Dialog */}
+      <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Role to User</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="role_select">Select Role *</Label>
+              <Select value={roleAssignment.roleId} onValueChange={(value) => setRoleAssignment({...roleAssignment, roleId: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map(role => (
+                    <SelectItem key={role.id} value={role.id}>{role.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="valid_until">Valid Until (Optional)</Label>
+              <Input
+                id="valid_until"
+                type="datetime-local"
+                value={roleAssignment.validUntil}
+                onChange={(e) => setRoleAssignment({...roleAssignment, validUntil: e.target.value})}
+              />
+            </div>
+            <div>
+              <Label htmlFor="assignment_reason">Assignment Reason</Label>
+              <Textarea
+                id="assignment_reason"
+                value={roleAssignment.reason}
+                onChange={(e) => setRoleAssignment({...roleAssignment, reason: e.target.value})}
+                placeholder="Reason for role assignment"
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowRoleDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAssignRole}>
+                Assign Role
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

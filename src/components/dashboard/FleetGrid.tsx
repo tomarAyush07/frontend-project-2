@@ -83,6 +83,16 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
     }
   };
 
+  const handleRefreshFleet = async () => {
+    if (token) {
+      await loadTrainsets();
+      toast({
+        title: "Fleet Data Refreshed",
+        description: "Latest fleet information has been loaded",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -94,6 +104,16 @@ const FleetGrid = ({ detailed = false }: FleetGridProps) => {
   if (detailed) {
     return (
       <div className="space-y-3 sm:space-y-4">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-lg font-semibold">Fleet Status ({trainsets.length} trainsets)</h2>
+            <p className="text-sm text-muted-foreground">Real-time monitoring of all KMRL trainsets</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleRefreshFleet}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
         {trainsets.map((trainset) => (
           <Card key={trainset.id} className="hover:shadow-government-md transition-shadow">
             <CardContent className="p-3 sm:p-4 lg:p-6">

@@ -26,6 +26,7 @@ import {
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSelector from "@/components/LanguageSelector";
+import { toast } from "@/hooks/use-toast";
 
 interface TopHeaderProps {
   currentTime: Date;
@@ -126,6 +127,20 @@ const TopHeader: React.FC<TopHeaderProps> = ({ currentTime, onLogout, onToggleSi
 
   const handleLogoutCancel = () => {
     setLogoutDialogOpen(false);
+  };
+
+  const handleViewProfile = () => {
+    toast({
+      title: "Profile",
+      description: "Profile management feature coming soon",
+    });
+  };
+
+  const handleViewAllNotifications = () => {
+    toast({
+      title: "Notifications",
+      description: "Comprehensive notifications view coming soon",
+    });
   };
 
   const getNotificationIcon = (type: string) => {
@@ -311,7 +326,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ currentTime, onLogout, onToggleSi
               </div>
             </ScrollArea>
             <div className="p-3 border-t border-border bg-white">
-              <Button variant="outline" size="sm" className="w-full hover:bg-muted">
+              <Button variant="outline" size="sm" className="w-full hover:bg-muted" onClick={handleViewAllNotifications}>
                 <Eye className="h-4 w-4 mr-2" />
                 View All Notifications
               </Button>
@@ -385,7 +400,7 @@ const TopHeader: React.FC<TopHeaderProps> = ({ currentTime, onLogout, onToggleSi
                   variant="outline" 
                   size="sm" 
                   className="w-full justify-start"
-                  onClick={() => setUserMenuOpen(false)}
+                  onClick={handleViewProfile}
                 >
                   <User className="h-4 w-4 mr-2" />
                   View Profile

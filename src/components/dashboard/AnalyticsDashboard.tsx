@@ -13,6 +13,7 @@ import {
   Zap,
   AlertTriangle
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { 
   LineChart, 
   Line, 
@@ -31,6 +32,9 @@ import {
 } from 'recharts';
 
 const AnalyticsDashboard = () => {
+  const [selectedMetric, setSelectedMetric] = useState("performance");
+  const [dateRange, setDateRange] = useState("30");
+
   // Sample data for charts
   const performanceData = [
     { month: 'Jan', availability: 85, punctuality: 92, efficiency: 88 },
@@ -121,6 +125,38 @@ const AnalyticsDashboard = () => {
     }
   ];
 
+  const handleExportData = () => {
+    const dataToExport = {
+      performance: performanceData,
+      maintenance: maintenanceData,
+      utilization: fleetUtilization,
+      energy: energyConsumption,
+      insights: predictiveInsights,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(dataToExport, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kmrl-analytics-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: "Analytics data has been exported successfully",
+    });
+  };
+
+  const handleTakeAction = (insight: any) => {
+    toast({
+      title: "Action Initiated",
+      description: `Action taken for: ${insight.action}`,
+    });
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* KPI Overview */}
@@ -164,7 +200,7 @@ const AnalyticsDashboard = () => {
                   <BarChart3 className="h-5 w-5" />
                   <span>Fleet Performance Trends</span>
                 </CardTitle>
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={handleExportData}>
                   <Download className="h-4 w-4 mr-2" />
                   Export
                 </Button>
@@ -313,7 +349,7 @@ const AnalyticsDashboard = () => {
                         <span className="text-sm font-medium text-primary">
                           Recommended: {insight.action}
                         </span>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleTakeAction(insight)}>
                           Take Action
                         </Button>
                       </div>

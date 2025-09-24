@@ -1,5 +1,5 @@
 // Fleet Management API Service
-const BASE_URL = 'https://kmrl-backend-qjvw.onrender.com/api/v1/fleet_management';
+const BASE_URL = 'http://localhost:8000/api/v1/fleet_management';
 
 export interface TrainsetType {
   id: string;
@@ -181,6 +181,37 @@ class FleetService {
     });
 
     return this.handleResponse<TrainsetType>(response);
+  }
+
+  async getTrainsetType(token: string, id: string): Promise<TrainsetType> {
+    const response = await fetch(`${BASE_URL}/trainset-types/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<TrainsetType>(response);
+  }
+
+  async updateTrainsetType(token: string, id: string, typeData: Partial<TrainsetType>): Promise<TrainsetType> {
+    const response = await fetch(`${BASE_URL}/trainset-types/${id}/`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(typeData),
+    });
+
+    return this.handleResponse<TrainsetType>(response);
+  }
+
+  async deleteTrainsetType(token: string, id: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/trainset-types/${id}/`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
   }
 
   // Trainset Endpoints
@@ -399,6 +430,172 @@ class FleetService {
     });
 
     return this.handleResponse<MileageLog>(response);
+  }
+
+  async getMileageLog(token: string, id: string): Promise<MileageLog> {
+    const response = await fetch(`${BASE_URL}/mileage-logs/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<MileageLog>(response);
+  }
+
+  async updateMileageLog(token: string, id: string, logData: Partial<MileageLog>): Promise<MileageLog> {
+    const response = await fetch(`${BASE_URL}/mileage-logs/${id}/`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(logData),
+    });
+
+    return this.handleResponse<MileageLog>(response);
+  }
+
+  // Car Endpoints
+  async getCars(token: string, params?: Record<string, any>): Promise<{ results: Car[], count: number }> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${BASE_URL}/cars/?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<{ results: Car[], count: number }>(response);
+  }
+
+  async getCar(token: string, id: string): Promise<Car> {
+    const response = await fetch(`${BASE_URL}/cars/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<Car>(response);
+  }
+
+  async createCar(token: string, carData: Partial<Car>): Promise<Car> {
+    const response = await fetch(`${BASE_URL}/cars/`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(carData),
+    });
+
+    return this.handleResponse<Car>(response);
+  }
+
+  async updateCar(token: string, id: string, carData: Partial<Car>): Promise<Car> {
+    const response = await fetch(`${BASE_URL}/cars/${id}/`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(carData),
+    });
+
+    return this.handleResponse<Car>(response);
+  }
+
+  // Component Type Endpoints
+  async getComponentTypes(token: string, params?: Record<string, any>): Promise<{ results: ComponentType[], count: number }> {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          queryParams.append(key, value.toString());
+        }
+      });
+    }
+
+    const response = await fetch(`${BASE_URL}/component-types/?${queryParams.toString()}`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<{ results: ComponentType[], count: number }>(response);
+  }
+
+  async getComponentType(token: string, id: string): Promise<ComponentType> {
+    const response = await fetch(`${BASE_URL}/component-types/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<ComponentType>(response);
+  }
+
+  async createComponentType(token: string, typeData: Partial<ComponentType>): Promise<ComponentType> {
+    const response = await fetch(`${BASE_URL}/component-types/`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(typeData),
+    });
+
+    return this.handleResponse<ComponentType>(response);
+  }
+
+  async updateComponentType(token: string, id: string, typeData: Partial<ComponentType>): Promise<ComponentType> {
+    const response = await fetch(`${BASE_URL}/component-types/${id}/`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(typeData),
+    });
+
+    return this.handleResponse<ComponentType>(response);
+  }
+
+  async deleteComponentType(token: string, id: string): Promise<void> {
+    const response = await fetch(`${BASE_URL}/component-types/${id}/`, {
+      method: 'DELETE',
+      headers: this.getAuthHeaders(token),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+  }
+
+  async createComponent(token: string, componentData: Partial<Component>): Promise<Component> {
+    const response = await fetch(`${BASE_URL}/components/`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(componentData),
+    });
+
+    return this.handleResponse<Component>(response);
+  }
+
+  async getComponent(token: string, id: string): Promise<Component> {
+    const response = await fetch(`${BASE_URL}/components/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<Component>(response);
+  }
+
+  async updateComponent(token: string, id: string, componentData: Partial<Component>): Promise<Component> {
+    const response = await fetch(`${BASE_URL}/components/${id}/`, {
+      method: 'PATCH',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(componentData),
+    });
+
+    return this.handleResponse<Component>(response);
+  }
+
+  async createPerformanceMetrics(token: string, metricsData: Partial<PerformanceMetrics>): Promise<PerformanceMetrics> {
+    const response = await fetch(`${BASE_URL}/performance-metrics/`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(metricsData),
+    });
+
+    return this.handleResponse<PerformanceMetrics>(response);
   }
 }
 

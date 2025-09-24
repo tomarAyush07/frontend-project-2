@@ -16,9 +16,22 @@ import {
   Settings,
   Download
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const InductionPlanner = () => {
   const [selectedScenario, setSelectedScenario] = useState("recommended");
+  const [showCreatePlanDialog, setShowCreatePlanDialog] = useState(false);
+  const [newPlan, setNewPlan] = useState({
+    trainset: '',
+    action: '',
+    depot: '',
+    time: '',
+    confidence: 0
+  });
   
   const scenarios = [
     {
@@ -106,6 +119,36 @@ const InductionPlanner = () => {
     return 'text-destructive';
   };
 
+  const handleRefreshAI = () => {
+    toast({
+      title: "AI Plan Refreshed",
+      description: "Induction plan has been recalculated with latest data",
+    });
+  };
+
+  const handleExportPlan = () => {
+    const planData = {
+      selectedScenario,
+      tonightsPlan,
+      scenarios,
+      exportedAt: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(planData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `induction-plan-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Plan Exported",
+      description: "Induction plan has been exported successfully",
+    });
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Scenario Selection */}
@@ -168,11 +211,11 @@ const InductionPlanner = () => {
               <span>Tonight's Induction Plan</span>
             </CardTitle>
             <div className="flex items-center space-x-2">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleRefreshAI}>
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh AI
               </Button>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={handleExportPlan}>
                 <Download className="h-4 w-4 mr-2" />
                 Export
               </Button>

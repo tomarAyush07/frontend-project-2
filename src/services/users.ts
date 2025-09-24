@@ -1,5 +1,5 @@
 // User Management API Service
-const BASE_URL = 'https://kmrl-backend-qjvw.onrender.com/api/v1/accounts';
+const BASE_URL = 'http://127.0.0.1:8000/api/v1/accounts';
 
 export interface Department {
   id: string;
@@ -390,6 +390,43 @@ class UserService {
     });
 
     return this.handleResponse<{ results: UserSession[], count: number }>(response);
+  }
+
+  async getDepartment(token: string, id: string): Promise<Department> {
+    const response = await fetch(`${BASE_URL}/departments/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<Department>(response);
+  }
+
+  async getRole(token: string, id: string): Promise<Role> {
+    const response = await fetch(`${BASE_URL}/roles/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<Role>(response);
+  }
+
+  async updateRole(token: string, id: string, roleData: Partial<Role>): Promise<Role> {
+    const response = await fetch(`${BASE_URL}/roles/${id}/`, {
+      method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(roleData),
+    });
+
+    return this.handleResponse<Role>(response);
+  }
+
+  async getUserActivity(token: string, id: string): Promise<UserActivity> {
+    const response = await fetch(`${BASE_URL}/activities/${id}/`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(token),
+    });
+
+    return this.handleResponse<UserActivity>(response);
   }
 }
 

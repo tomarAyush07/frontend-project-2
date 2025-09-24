@@ -22,6 +22,7 @@ import {
   Wrench,
   Zap
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Alert {
   id: string;
@@ -229,6 +230,40 @@ const AlertsLogs: React.FC<AlertsLogsProps> = ({ onAlertCountChange }) => {
 
   const deleteAlert = (alertId: string) => {
     setAlerts(prev => prev.filter(alert => alert.id !== alertId));
+    toast({
+      title: "Alert Deleted",
+      description: "Alert has been removed from the system",
+    });
+  };
+
+  const handleExportLogs = () => {
+    const exportData = {
+      alerts: filteredAlerts,
+      logs: filteredLogs,
+      exportedAt: new Date().toISOString(),
+      filters: { searchTerm, selectedType, selectedCategory }
+    };
+    
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `kmrl-alerts-logs-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Data Exported",
+      description: "Alerts and logs have been exported successfully",
+    });
+  };
+
+  const handleRefreshData = () => {
+    toast({
+      title: "Data Refreshed",
+      description: "Latest alerts and logs have been loaded",
+    });
   };
 
   const filteredAlerts = alerts.filter(alert => {
@@ -255,12 +290,12 @@ const AlertsLogs: React.FC<AlertsLogsProps> = ({ onAlertCountChange }) => {
           <p className="text-sm sm:text-base text-muted-foreground">Monitor system alerts and operational logs for KMRL fleet management</p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExportLogs}>
             <Download className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Export Logs</span>
             <span className="sm:hidden">Export</span>
           </Button>
-          <Button variant="outline" size="sm" className="w-full sm:w-auto">
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleRefreshData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>

@@ -10,8 +10,16 @@ import {
   Users,
   Calendar
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const RecentActivity = () => {
+  const handleViewAllActivities = () => {
+    toast({
+      title: "Activity Log",
+      description: "Complete activity history view coming soon",
+    });
+  };
+
   const activities = [
     {
       id: 1,
@@ -89,7 +97,10 @@ const RecentActivity = () => {
         </ScrollArea>
         
         <div className="p-3 sm:p-4 border-t border-border">
-          <button className="w-full text-xs sm:text-sm text-primary hover:text-primary-hover transition-colors">
+          <button 
+            className="w-full text-xs sm:text-sm text-primary hover:text-primary-hover transition-colors"
+            onClick={handleViewAllActivities}
+          >
             View All Activities
           </button>
         </div>

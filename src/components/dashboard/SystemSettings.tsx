@@ -30,6 +30,7 @@ import {
   MemoryStick,
   Network
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
@@ -141,6 +142,28 @@ const SystemSettings = () => {
   const handleSaveSettings = () => {
     // In real app, this would save to backend
     console.log("Settings saved:", settings);
+    toast({
+      title: "Settings Saved",
+      description: "System settings have been updated successfully",
+    });
+  };
+
+  const handleExportSettings = () => {
+    const dataStr = JSON.stringify(settings, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'kmrl-system-settings.json';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleBackupSystem = () => {
+    toast({
+      title: "Backup Initiated",
+      description: "System backup has been started. You will be notified when complete.",
+    });
   };
 
   return (
@@ -156,6 +179,11 @@ const SystemSettings = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             <span className="hidden sm:inline">Refresh Status</span>
             <span className="sm:hidden">Refresh</span>
+          </Button>
+          <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={handleExportSettings}>
+            <Download className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">Export Settings</span>
+            <span className="sm:hidden">Export</span>
           </Button>
           <Button className="btn-government w-full sm:w-auto" onClick={handleSaveSettings}>
             <Save className="h-4 w-4 mr-2" />
@@ -545,6 +573,10 @@ const SystemSettings = () => {
                   <Button variant="outline" size="sm">
                     <Download className="h-4 w-4 mr-2" />
                     Download Backup
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleBackupSystem}>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Start Backup
                   </Button>
                   <Button variant="outline" size="sm">
                     <Upload className="h-4 w-4 mr-2" />

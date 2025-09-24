@@ -48,6 +48,10 @@ const FleetManagement = () => {
   const [selectedTrainset, setSelectedTrainset] = useState<Trainset | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [newTrainset, setNewTrainset] = useState<Partial<Trainset>>({});
+  const [showCreateTypeDialog, setShowCreateTypeDialog] = useState(false);
+  const [newTrainsetType, setNewTrainsetType] = useState<Partial<TrainsetType>>({});
+  const [showMileageDialog, setShowMileageDialog] = useState(false);
+  const [mileageUpdate, setMileageUpdate] = useState({ trainsetId: '', distance: '' });
 
   useEffect(() => {
     if (token) {
@@ -123,6 +127,62 @@ const FleetManagement = () => {
     }
   };
 
+  const handleCreateTrainsetType = async () => {
+    try {
+      if (!newTrainsetType.name || !newTrainsetType.code || !newTrainsetType.car_count) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await fleetService.createTrainsetType(token!, newTrainsetType);
+      toast({
+        title: "Success",
+        description: "Trainset type created successfully",
+      });
+      setShowCreateTypeDialog(false);
+      setNewTrainsetType({});
+      loadFleetData();
+    } catch (error: any) {
+      toast({
+        title: "Error Creating Trainset Type",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateMileage = async () => {
+    try {
+      if (!mileageUpdate.trainsetId || !mileageUpdate.distance) {
+        toast({
+          title: "Validation Error",
+          description: "Please select a trainset and enter distance",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await fleetService.updateTrainsetMileage(token!, mileageUpdate.trainsetId, mileageUpdate.distance);
+      toast({
+        title: "Success",
+        description: "Mileage updated successfully",
+      });
+      setShowMileageDialog(false);
+      setMileageUpdate({ trainsetId: '', distance: '' });
+      loadFleetData();
+    } catch (error: any) {
+      toast({
+        title: "Error Updating Mileage",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'IN_SERVICE': return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -175,6 +235,117 @@ const FleetManagement = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+          <Dialog open={showCreateTypeDialog} onOpenChange={setShowCreateTypeDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Add Type
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Trainset Type</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="type_name">Type Name *</Label>
+                    <Input
+                      id="type_name"
+                      value={newTrainsetType.name || ''}
+                      onChange={(e) => setNewTrainsetType({...newTrainsetType, name: e.target.value})}
+                      placeholder="Standard Metro"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="type_code">Type Code *</Label>
+                    <Input
+                      id="type_code"
+                      value={newTrainsetType.code || ''}
+                      onChange={(e) => setNewTrainsetType({...newTrainsetType, code: e.target.value})}
+                      placeholder="STD-4C"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="car_count">Car Count *</Label>
+                    <Input
+                      id="car_count"
+                      type="number"
+                      value={newTrainsetType.car_count || ''}
+                      onChange={(e) => setNewTrainsetType({...newTrainsetType, car_count: parseInt(e.target.value)})}
+                      placeholder="4"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="type_description">Description</Label>
+                    <Input
+                      id="type_description"
+                      value={newTrainsetType.description || ''}
+                      onChange={(e) => setNewTrainsetType({...newTrainsetType, description: e.target.value})}
+                      placeholder="Standard 4-car metro trainset"
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowCreateTypeDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateTrainsetType}>
+                    Create Type
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={showMileageDialog} onOpenChange={setShowMileageDialog}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Activity className="h-4 w-4 mr-2" />
+                Update Mileage
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Update Trainset Mileage</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="mileage_trainset">Select Trainset *</Label>
+                  <Select value={mileageUpdate.trainsetId} onValueChange={(value) => setMileageUpdate({...mileageUpdate, trainsetId: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select trainset" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {trainsets.map(trainset => (
+                        <SelectItem key={trainset.id} value={trainset.id}>{trainset.trainset_number}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="distance">Distance (km) *</Label>
+                  <Input
+                    id="distance"
+                    type="number"
+                    step="0.01"
+                    value={mileageUpdate.distance}
+                    onChange={(e) => setMileageUpdate({...mileageUpdate, distance: e.target.value})}
+                    placeholder="125.50"
+                  />
+                </div>
+                <div className="flex justify-end space-x-2">
+                  <Button variant="outline" onClick={() => setShowMileageDialog(false)}>
+                    Cancel
+                  </Button>
+                  <Button onClick={handleUpdateMileage}>
+                    Update Mileage
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
             <DialogTrigger asChild>
               <Button className="btn-government">
@@ -609,7 +780,7 @@ const FleetManagement = () => {
                         <Wrench className="h-4 w-4 mr-2" />
                         Schedule Maintenance
                       </Button>
-                      <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => handleUpdateServiceStatus(selectedTrainset.id, 'STANDBY', 'Maintenance completed')}>
                         <CheckCircle className="h-4 w-4 mr-2" />
                         Complete Maintenance
                       </Button>
@@ -619,7 +790,7 @@ const FleetManagement = () => {
                   <div>
                     <Label>Data Actions</Label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => { setMileageUpdate({...mileageUpdate, trainsetId: selectedTrainset.id}); setShowMileageDialog(true); }}>
                         <Activity className="h-4 w-4 mr-2" />
                         Update Mileage
                       </Button>

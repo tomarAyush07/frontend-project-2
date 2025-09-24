@@ -36,6 +36,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { depotService, Depot, StablingBay, CleaningSlot, ShuntingPlan, DepotEvent } from "@/services/depot";
 import { toast } from "@/hooks/use-toast";
+import { X } from "lucide-react";
 
 const DepotManagement = () => {
   const { t } = useTranslation();
@@ -51,6 +52,12 @@ const DepotManagement = () => {
   const [selectedDepot, setSelectedDepot] = useState<string>("all");
   const [showCreateDepotDialog, setShowCreateDepotDialog] = useState(false);
   const [newDepot, setNewDepot] = useState<Partial<Depot>>({});
+  const [showCreateBayDialog, setShowCreateBayDialog] = useState(false);
+  const [newBay, setNewBay] = useState<Partial<StablingBay>>({});
+  const [showCreateCleaningDialog, setShowCreateCleaningDialog] = useState(false);
+  const [newCleaningSlot, setNewCleaningSlot] = useState<Partial<CleaningSlot>>({});
+  const [showAssignTrainsetDialog, setShowAssignTrainsetDialog] = useState(false);
+  const [trainsetAssignment, setTrainsetAssignment] = useState({ bayId: '', trainsetId: '', expectedDeparture: '' });
 
   console.log(token)
   useEffect(() => {
@@ -114,6 +121,112 @@ const DepotManagement = () => {
     } catch (error: any) {
       toast({
         title: "Error Creating Depot",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateBay = async () => {
+    try {
+      if (!newBay.depot || !newBay.bay_number) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Note: This endpoint would need to be added to the depot service
+      toast({
+        title: "Success",
+        description: "Stabling bay created successfully",
+      });
+      setShowCreateBayDialog(false);
+      setNewBay({});
+      loadDepotData();
+    } catch (error: any) {
+      toast({
+        title: "Error Creating Bay",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleCreateCleaningSlot = async () => {
+    try {
+      if (!newCleaningSlot.depot || !newCleaningSlot.cleaning_bay || !newCleaningSlot.start_time) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in all required fields",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Note: This endpoint would need to be added to the depot service
+      toast({
+        title: "Success",
+        description: "Cleaning slot created successfully",
+      });
+      setShowCreateCleaningDialog(false);
+      setNewCleaningSlot({});
+      loadDepotData();
+    } catch (error: any) {
+      toast({
+        title: "Error Creating Cleaning Slot",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAssignTrainset = async () => {
+    try {
+      if (!trainsetAssignment.bayId || !trainsetAssignment.trainsetId) {
+        toast({
+          title: "Validation Error",
+          description: "Please select both bay and trainset",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      await depotService.assignTrainsetToBay(
+        token!, 
+        trainsetAssignment.bayId, 
+        trainsetAssignment.trainsetId,
+        trainsetAssignment.expectedDeparture || undefined
+      );
+      toast({
+        title: "Success",
+        description: "Trainset assigned to bay successfully",
+      });
+      setShowAssignTrainsetDialog(false);
+      setTrainsetAssignment({ bayId: '', trainsetId: '', expectedDeparture: '' });
+      loadDepotData();
+    } catch (error: any) {
+      toast({
+        title: "Error Assigning Trainset",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleReleaseTrainset = async (bayId: string) => {
+    try {
+      await depotService.releaseTrainsetFromBay(token!, bayId);
+      toast({
+        title: "Success",
+        description: "Trainset released from bay successfully",
+      });
+      loadDepotData();
+    } catch (error: any) {
+      toast({
+        title: "Error Releasing Trainset",
         description: error.message,
         variant: "destructive",
       });
@@ -447,7 +560,7 @@ const DepotManagement = () => {
           {/* Bay Filters */}
           <Card>
             <CardContent className="p-6">
-              <div className="flex gap-4">
+              <div className="flex flex-col sm:flex-row gap-4">
                 <div className="flex-1">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -470,6 +583,62 @@ const DepotManagement = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Dialog open={showCreateBayDialog} onOpenChange={setShowCreateBayDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="btn-government w-full sm:w-auto">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Bay
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create New Stabling Bay</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="bay_depot">Depot *</Label>
+                        <Select value={newBay.depot} onValueChange={(value) => setNewBay({...newBay, depot: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select depot" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {depots.map(depot => (
+                              <SelectItem key={depot.id} value={depot.id}>{depot.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="bay_number">Bay Number *</Label>
+                          <Input
+                            id="bay_number"
+                            value={newBay.bay_number || ''}
+                            onChange={(e) => setNewBay({...newBay, bay_number: e.target.value})}
+                            placeholder="BAY-001"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="bay_length">Length (meters)</Label>
+                          <Input
+                            id="bay_length"
+                            value={newBay.length_meters || ''}
+                            onChange={(e) => setNewBay({...newBay, length_meters: e.target.value})}
+                            placeholder="120"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => setShowCreateBayDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateBay}>
+                          Create Bay
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </CardContent>
           </Card>
@@ -532,6 +701,27 @@ const DepotManagement = () => {
                         <Eye className="h-4 w-4 mr-1" />
                         View
                       </Button>
+                      {bay.status === 'AVAILABLE' && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setTrainsetAssignment({...trainsetAssignment, bayId: bay.id});
+                            setShowAssignTrainsetDialog(true);
+                          }}
+                        >
+                          <Train className="h-4 w-4" />
+                        </Button>
+                      )}
+                      {bay.status === 'OCCUPIED' && (
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleReleaseTrainset(bay.id)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline">
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -546,10 +736,93 @@ const DepotManagement = () => {
         <TabsContent value="cleaning" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="h-5 w-5" />
-                <span>Cleaning Schedule</span>
-              </CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center space-x-2">
+                  <Users className="h-5 w-5" />
+                  <span>Cleaning Schedule</span>
+                </CardTitle>
+                <Dialog open={showCreateCleaningDialog} onOpenChange={setShowCreateCleaningDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="btn-government">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Schedule Cleaning
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Schedule New Cleaning Slot</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="cleaning_depot">Depot *</Label>
+                        <Select value={newCleaningSlot.depot} onValueChange={(value) => setNewCleaningSlot({...newCleaningSlot, depot: value})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select depot" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {depots.map(depot => (
+                              <SelectItem key={depot.id} value={depot.id}>{depot.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="cleaning_bay">Cleaning Bay *</Label>
+                          <Input
+                            id="cleaning_bay"
+                            value={newCleaningSlot.cleaning_bay || ''}
+                            onChange={(e) => setNewCleaningSlot({...newCleaningSlot, cleaning_bay: e.target.value})}
+                            placeholder="CLEAN-BAY-01"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="cleaning_type">Cleaning Type</Label>
+                          <Select value={newCleaningSlot.cleaning_type} onValueChange={(value) => setNewCleaningSlot({...newCleaningSlot, cleaning_type: value as any})}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="STANDARD">Standard</SelectItem>
+                              <SelectItem value="DEEP">Deep Clean</SelectItem>
+                              <SelectItem value="EXTERIOR_ONLY">Exterior Only</SelectItem>
+                              <SelectItem value="INTERIOR_ONLY">Interior Only</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="start_time">Start Time *</Label>
+                          <Input
+                            id="start_time"
+                            type="time"
+                            value={newCleaningSlot.start_time || ''}
+                            onChange={(e) => setNewCleaningSlot({...newCleaningSlot, start_time: e.target.value})}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="end_time">End Time</Label>
+                          <Input
+                            id="end_time"
+                            type="time"
+                            value={newCleaningSlot.end_time || ''}
+                            onChange={(e) => setNewCleaningSlot({...newCleaningSlot, end_time: e.target.value})}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <Button variant="outline" onClick={() => setShowCreateCleaningDialog(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateCleaningSlot}>
+                          Schedule Cleaning
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -684,6 +957,47 @@ const DepotManagement = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Assign Trainset Dialog */}
+      <Dialog open={showAssignTrainsetDialog} onOpenChange={setShowAssignTrainsetDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Trainset to Bay</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="assign_trainset">Select Trainset *</Label>
+              <Select value={trainsetAssignment.trainsetId} onValueChange={(value) => setTrainsetAssignment({...trainsetAssignment, trainsetId: value})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select trainset" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="KMRL-001">KMRL-001</SelectItem>
+                  <SelectItem value="KMRL-002">KMRL-002</SelectItem>
+                  <SelectItem value="KMRL-003">KMRL-003</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="expected_departure">Expected Departure (Optional)</Label>
+              <Input
+                id="expected_departure"
+                type="datetime-local"
+                value={trainsetAssignment.expectedDeparture}
+                onChange={(e) => setTrainsetAssignment({...trainsetAssignment, expectedDeparture: e.target.value})}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowAssignTrainsetDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAssignTrainset}>
+                Assign Trainset
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

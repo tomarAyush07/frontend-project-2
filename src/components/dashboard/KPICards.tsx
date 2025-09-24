@@ -11,8 +11,16 @@ import {
   BarChart3,
   Zap
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 const KPICards = () => {
+  const handleKPIClick = (kpiTitle: string) => {
+    toast({
+      title: "KPI Details",
+      description: `Detailed view for ${kpiTitle} coming soon`,
+    });
+  };
+
   const kpiData = [
     {
       title: "Fleet Availability",
@@ -85,7 +93,7 @@ const KPICards = () => {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
       {kpiData.map((kpi, index) => (
-        <Card key={index} className="hover:shadow-government-md transition-shadow">
+        <Card key={index} className="hover:shadow-government-md transition-shadow cursor-pointer" onClick={() => handleKPIClick(kpi.title)}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-3">
             <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground truncate">
               {kpi.title}

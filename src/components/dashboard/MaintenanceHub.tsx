@@ -17,9 +17,24 @@ import {
   RefreshCw,
   Sparkles
 } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MaintenanceHub = () => {
   const [activeFilter, setActiveFilter] = useState("all");
+  const [showCreateJobDialog, setShowCreateJobDialog] = useState(false);
+  const [newJobCard, setNewJobCard] = useState({
+    trainset: '',
+    type: '',
+    priority: 'Medium',
+    assignedTo: '',
+    estimatedHours: 0,
+    dueDate: '',
+    location: ''
+  });
 
   const jobCards = [
     {
@@ -158,6 +173,39 @@ const MaintenanceHub = () => {
     }
   };
 
+  const handleCreateJobCard = () => {
+    if (!newJobCard.trainset || !newJobCard.type) {
+      toast({
+        title: "Validation Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Success",
+      description: "Job card created successfully",
+    });
+    setShowCreateJobDialog(false);
+    setNewJobCard({
+      trainset: '',
+      type: '',
+      priority: 'Medium',
+      assignedTo: '',
+      estimatedHours: 0,
+      dueDate: '',
+      location: ''
+    });
+  };
+
+  const handleScheduleMaintenance = (trainset: string) => {
+    toast({
+      title: "Maintenance Scheduled",
+      description: `Preventive maintenance scheduled for ${trainset}`,
+    });
+  };
+
   return (
     <div className="space-y-4 sm:space-y-6">
       <Tabs defaultValue="job-cards" className="w-full">
@@ -192,11 +240,76 @@ const MaintenanceHub = () => {
                     <Filter className="h-4 w-4 mr-2" />
                     Filter
                   </Button>
-                  <Button size="sm" className="btn-government w-full sm:w-auto">
-                    <Plus className="h-4 w-4 mr-2" />
-                    <span className="hidden sm:inline">New Job Card</span>
-                    <span className="sm:hidden">New Job</span>
-                  </Button>
+                  <Dialog open={showCreateJobDialog} onOpenChange={setShowCreateJobDialog}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" className="btn-government w-full sm:w-auto">
+                        <Plus className="h-4 w-4 mr-2" />
+                        <span className="hidden sm:inline">New Job Card</span>
+                        <span className="sm:hidden">New Job</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Create New Job Card</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="job_trainset">Trainset *</Label>
+                            <Input
+                              id="job_trainset"
+                              value={newJobCard.trainset}
+                              onChange={(e) => setNewJobCard({...newJobCard, trainset: e.target.value})}
+                              placeholder="KMRL-015"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="job_type">Maintenance Type *</Label>
+                            <Input
+                              id="job_type"
+                              value={newJobCard.type}
+                              onChange={(e) => setNewJobCard({...newJobCard, type: e.target.value})}
+                              placeholder="A-Type Maintenance"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="job_priority">Priority</Label>
+                            <Select value={newJobCard.priority} onValueChange={(value) => setNewJobCard({...newJobCard, priority: value})}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Low">Low</SelectItem>
+                                <SelectItem value="Medium">Medium</SelectItem>
+                                <SelectItem value="High">High</SelectItem>
+                                <SelectItem value="Critical">Critical</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label htmlFor="job_hours">Estimated Hours</Label>
+                            <Input
+                              id="job_hours"
+                              type="number"
+                              value={newJobCard.estimatedHours}
+                              onChange={(e) => setNewJobCard({...newJobCard, estimatedHours: parseInt(e.target.value)})}
+                              placeholder="8"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex justify-end space-x-2">
+                          <Button variant="outline" onClick={() => setShowCreateJobDialog(false)}>
+                            Cancel
+                          </Button>
+                          <Button onClick={handleCreateJobCard}>
+                            Create Job Card
+                          </Button>
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </div>
             </CardHeader>
@@ -361,7 +474,9 @@ const MaintenanceHub = () => {
                       </div>
                       
                       <div className="flex space-x-2 mt-4">
-                        <Button size="sm" variant="outline">Schedule Maintenance</Button>
+                        <Button size="sm" variant="outline" onClick={() => handleScheduleMaintenance(prediction.trainset)}>
+                          Schedule Maintenance
+                        </Button>
                         <Button size="sm" variant="outline">View Analytics</Button>
                       </div>
                     </CardContent>

@@ -1,5 +1,5 @@
 // Authentication API Service for KMRL Fleet Management System - JWT Implementation
-const BASE_URL = 'https://kmrl-backend-qjvw.onrender.com/api/v1/accounts';
+const BASE_URL = 'http://127.0.0.1:8000/api/v1/accounts';
 
 export interface LoginRequest {
   email: string;
@@ -94,6 +94,20 @@ export interface SessionInfo {
   active_sessions_count: number;
   max_sessions: number;
   session_valid: boolean;
+}
+
+export interface UserPreferencesUpdate {
+  default_dashboard?: string;
+  dashboard_refresh_interval?: number;
+  show_quick_stats?: boolean;
+  theme?: string;
+  language?: string;
+  timezone?: string;
+  date_format?: string;
+  time_format?: string;
+  default_depot_id?: string;
+  favorite_trainsets?: string[];
+  quick_filters?: Record<string, any>;
 }
 
 export interface DashboardStats {
@@ -328,6 +342,17 @@ class AuthService {
   async updatePreferences(token: string, preferences: UserPreferences): Promise<UserPreferences> {
     const response = await fetch(`${BASE_URL}/preferences/`, {
       method: 'PUT',
+      headers: this.getAuthHeaders(token),
+      body: JSON.stringify(preferences),
+    });
+
+    return this.handleResponse<UserPreferences>(response);
+  }
+
+  // 11b. Partial Update User Preferences
+  async patchPreferences(token: string, preferences: Partial<UserPreferences>): Promise<UserPreferences> {
+    const response = await fetch(`${BASE_URL}/preferences/`, {
+      method: 'PATCH',
       headers: this.getAuthHeaders(token),
       body: JSON.stringify(preferences),
     });
